@@ -29,6 +29,9 @@ def verify_ex1(SR):
 			if max(abs(x - xr)) > .499:
 				pass
 			t = x.dot(B)
+			res = SR(B, t)
+			if res is None:
+				raise ExerciseFailed("Exercise 1 Failed : nothing returned")
 			if not np.allclose(SR(B, t), xr.dot(B)):
 				raise ExerciseFailed("Exercise 1 Failed")
 	print("Exercise 1 succeeded")

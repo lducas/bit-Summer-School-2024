@@ -54,9 +54,7 @@ def in_lattice(B, t):
 
 def simple_rounding(B, t):
 	""" Returns a lattice vector close to v given a basis B"""
-	x = np.linalg.solve(B.transpose(), t)
-	xr = np.round(x)
-	return xr.dot(B)
+	pass
 
 if argv[0].endswith("sol1.py") or argv[0].endswith("ex1.py"):
 	verify_ex1(simple_rounding)
@@ -69,7 +67,7 @@ if argv[0].endswith("sol1.py") or argv[0].endswith("ex1.py"):
 
 def orth_proj(x, y):
 	""" Returns the orthogonal projection of vector x orthognally to vector y"""
-	return x - (x.dot(y)/(y.dot(y)))*y
+	pass
 
 if argv[0].endswith("sol1.py") or argv[0].endswith("ex1.py"):
 	verify_ex2a(orth_proj)
@@ -81,11 +79,7 @@ def Gram_Schmidt_orth(B):
 	n,_ = B.shape
 	# Makes a copy of B, but change the type to float
 	Bs = array(B, dtype=float)
-
-	for i in range(n):
-		for j in range(i):
-			Bs[i] = orth_proj(Bs[i], Bs[j])
-	return Bs
+	pass
 
 if argv[0].endswith("sol1.py") or argv[0].endswith("ex1.py"):
 	verify_ex2b(Gram_Schmidt_orth)
@@ -102,14 +96,9 @@ def nearest_plane(B, Bs, t):
 	n,d = B.shape
 	# copy t, to avoid modying the value of the function caller
 	tt = np.copy(t)
-
 	v = zeros(d, dtype=int)
-	for i in reversed(range(n)):
-		x = tt.dot(Bs[i]) / Bs[i].dot(Bs[i])
-		k = int(round(x))
-		tt -= k * B[i]
-		v += k * B[i]
-	return v
+	pass
+
 if argv[0].endswith("sol1.py") or argv[0].endswith("ex1.py"):
 	verify_ex3(in_lattice, Gram_Schmidt_orth, nearest_plane)
 
@@ -137,12 +126,7 @@ def plot_two_hist(data_SR, data_NP, n, save=False):
 
 
 def compare_norm_distrib(B, samples):
-	n, _ = B.shape
-	Bs = Gram_Schmidt_orth(B)
-	data_SR = [norm((np.random.rand(n) - .5).dot(B)) for x in range(samples)]
-	data_NP = [norm((np.random.rand(n) - .5).dot(Bs)) for x in range(samples)]
-	plot_two_hist(data_SR, data_NP, n)
-
+	pass
 
 if argv[0].endswith("sol1.py") or argv[0].endswith("ex1.py"):
 	compare_norm_distrib(B2, 50000)

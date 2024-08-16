@@ -23,29 +23,7 @@ from ver2 import verify_ex3 as verify_ex1
 gamma_2 = sqrt(4/3)
 
 def fast_LLL(B, epsilon=0.01, anim=True):
-	n,_ = B.shape
-	Bs = Gram_Schmidt_orth(B)
-	size_reduce(B, Bs)
-
-	done = False
-	while not done:
-		done = True
-		skip = False
-		for i in range(n-1):
-			if skip:
-				skip = False
-				continue	
-			if norm(Bs[i]) > (gamma_2+epsilon) * norm(Bs[i+1]):
-				done = False
-				x1 = np.copy(Bs[i])
-				x2 = Bs[i+1] + (B[i+1].dot(Bs[i]) / (Bs[i].dot(Bs[i]))) * Bs[i]
-				X = array([x1, x2])
-				U = lagrange_reduce(X)
-				B[i:i+2] = U.dot(B[i:i+2])
-				skip = True				
-
-		Bs = Gram_Schmidt_orth(B)
-		size_reduce(B, Bs)
+	pass
 
 if argv[0].endswith("sol3.py") or argv[0].endswith("ex3.py"):
 	verify_ex1(fast_LLL, Gram_Schmidt_orth)

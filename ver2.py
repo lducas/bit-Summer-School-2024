@@ -26,6 +26,8 @@ def verify_ex1(LR):
 		B = iarray([[999, 0], [randint(0, 999), 1]])
 		B_ = np.copy(B)
 		U = LR(B)
+		if U is None:
+			raise ExerciseFailed("Exercise 1 Failed : Nothing returned")
 		if not isinstance(U[0,0], np.int64):
 			raise ExerciseFailed("Exercise 1 Failed : U is not an integer matrix")
 		if not round(abs(np.linalg.det(U))) == 1:
