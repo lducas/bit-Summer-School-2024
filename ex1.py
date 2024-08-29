@@ -1,5 +1,5 @@
 import numpy as np
-import matplotlib.pyplot as plt
+# import matplotlib.pyplot as plt
 from numpy import zeros, array
 from numpy.linalg import norm
 from sys import argv
@@ -54,7 +54,7 @@ def in_lattice(B, t):
 
 def simple_rounding(B, t):
 	""" Returns a lattice vector close to v given a basis B"""
-	pass
+	return 0
 
 if argv[0].endswith("sol1.py") or argv[0].endswith("ex1.py"):
 	verify_ex1(simple_rounding)

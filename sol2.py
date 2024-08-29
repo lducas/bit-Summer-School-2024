@@ -23,7 +23,7 @@ def lagrange_reduce(B):
 	in place). 
 	Also output the transformation matrix U, sending the initial basis to the final basis
 	"""
-	U = np.identity(2, dtype=int)
+	U = np.identity(2, dtype="int64")
 	first = True
 	while first or np.linalg.norm(B[1]) < np.linalg.norm(B[0]):
 		B[[0, 1]] = B[[1, 0]]

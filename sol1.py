@@ -139,7 +139,8 @@ def plot_two_hist(data_SR, data_NP, n, save=False):
 def compare_norm_distrib(B, samples):
 	n, _ = B.shape
 	Bs = Gram_Schmidt_orth(B)
-	data_SR = [norm((np.random.rand(n) - .5).dot(B)) for x in range(samples)]
+	#data_SR = [norm((np.random.rand(n) - array(n*[.5])).dot(B)) for x in range(samples)]
+	data_SR = [norm(np.random.uniform(-.5,.5, n).dot(B)) for x in range(samples)]
 	data_NP = [norm((np.random.rand(n) - .5).dot(Bs)) for x in range(samples)]
 	plot_two_hist(data_SR, data_NP, n)
 

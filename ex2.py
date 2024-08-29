@@ -23,7 +23,7 @@ def lagrange_reduce(B):
 	in place). 
 	Also output the transformation matrix U, sending the initial basis to the final basis
 	"""
-	U = np.identity(2, dtype=int)
+	U = np.identity(2, dtype="int64")
 	pass
 
 if argv[0].endswith("sol2.py") or argv[0].endswith("ex2.py"):
