@@ -23,7 +23,35 @@ from ver2 import verify_ex3 as verify_ex1
 gamma_2 = sqrt(4/3)
 
 def fast_LLL(B, epsilon=0.01, anim=True):
-	pass
+	n,_ = B.shape
+
+	# Size-reduce basis
+	Bs = Gram_Schmidt_orth(B)
+	size_reduce(B, Bs)
+
+	done = False
+	while not done:
+		done = True
+
+		for i in range(n-1):			
+			if norm(Bs[i]) > (gamma_2 + epsilon) * norm(Bs[i+1]):
+				done = False
+
+				# Apply Lagrange to the basis 2-dimensional basis P = [pi_i(b_i), pi_i(b_{i+1})].
+				p1 = Bs[i]
+				p2 = Bs[i+1] + (B[i+1].dot(Bs[i]) / (Bs[i].dot(Bs[i]))) * Bs[i]
+				P = array([p1, p2])
+
+				# Obtain U from the Lagrange reduction of P
+				U = lagrange_reduce(P)
+
+				# Obtain new basis vectors b_i and b_i+1
+				B[i:i+2] = U.dot(B[i:i+2])
+
+		# Update Gram-Schmidt ortogonalized basis Bs and size-reduce B
+		Bs = Gram_Schmidt_orth(B)
+		size_reduce(B, Bs)
+
 
 if argv[0].endswith("sol3.py") or argv[0].endswith("ex3.py"):
 	verify_ex1(fast_LLL, Gram_Schmidt_orth)

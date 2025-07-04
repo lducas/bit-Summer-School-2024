@@ -10,6 +10,10 @@ from math import sqrt, log
 from random import randint
 from sys import argv
 
+def swap(x, y):
+    x[:], y[:] = y.copy(), x.copy()
+
+
 ############
 # Exercise 1
 # Implement Lagrange reduction Algorithm. The algorithm should output
@@ -18,13 +22,31 @@ from sys import argv
 # than to B all along the algorithm.
 ############
 
-def lagrange_reduce(B):
+def lagrange_reduce(B, max_num_iter = 100):
 	""" Given a basis with two rows as input, apply lagrange reduction to B (modified 
 	in place). 
 	Also output the transformation matrix U, sending the initial basis to the final basis
 	"""
 	U = np.identity(2, dtype="int64")
-	pass
+
+	for i in range(max_num_iter):
+
+		# swap rows
+		swap(B[0], B[1])
+		swap(U[0], U[1])
+
+		# calculate k
+		k = int(round(B[0].dot(B[1]) / B[0].dot(B[0])))
+
+		# reduce rows
+		B[1] -= k * B[0]
+		U[1] -= k * U[0]
+
+		# exit condition
+		if norm(B[1]) >= norm(B[0]):
+			break
+	
+	return U
 
 if argv[0].endswith("sol2.py") or argv[0].endswith("ex2.py"):
 	verify_ex1(lagrange_reduce)
@@ -32,7 +54,7 @@ if argv[0].endswith("sol2.py") or argv[0].endswith("ex2.py"):
 
 ############
 # Exercise 2
-# Implement a the Size-Reduction Algorithm (in place) on a basis input B. 
+# Implement the Size-Reduction Algorithm (in place) on a basis input B. 
 # As a  by-product, provide as output the Gram-Schimdt orthogonalisation of B.
 #
 # Note: In the lecture notes, the NearestPlane is applied to a projection
@@ -49,7 +71,13 @@ def size_reduce(B, Bs):
 	"""
 	# Get the dimension number of vectors in the basis
 	n,_ = B.shape
-	pass
+	
+	# Size-reduce basis
+	for i in range(n):
+		v = nearest_plane(B[:i], Bs[:i], B[i])
+		B[i] -= v
+
+	return
 
 if argv[0].endswith("sol2.py") or argv[0].endswith("ex2.py"):
 	verify_ex2(size_reduce, Gram_Schmidt_orth)
@@ -66,10 +94,43 @@ if argv[0].endswith("sol2.py") or argv[0].endswith("ex2.py"):
 # pi_i(b_{i+1}) = b*_{i+1} + (<b_i+1, b*_i> / ||b*_i||^2) * b*_i
 ############
 
-gamma_2 = sqrt(4/3)
+gamma_2 = sqrt(4/3)	
+
 
 def LLL(B, epsilon=0.01, anim=True):
-	pass
+
+	n,_ = B.shape
+
+	# Size-reduce basis
+	Bs = Gram_Schmidt_orth(B)
+	size_reduce(B, Bs)
+
+	while True:
+		yield [log(norm(x)) for x in Bs]		
+
+		# Find an index to be Lagrange-reduced
+		for i in range(n):
+			# If no index is found, everything is already reduced
+			if i == n - 1:
+				return
+			if norm(Bs[i]) > (gamma_2 + epsilon) * norm(Bs[i+1]):
+				break
+
+		# Apply Lagrange to the basis 2-dimensional basis P = [pi_i(b_i), pi_i(b_{i+1})].
+		p1 = Bs[i]
+		p2 = Bs[i+1] + (B[i+1].dot(Bs[i]) / (Bs[i].dot(Bs[i]))) * Bs[i]
+		P = array([p1, p2])
+
+		# Obtain U from the Lagrange reduction of P
+		U = lagrange_reduce(P)
+
+		# Obtain new basis vectors b_i and b_i+1
+		B[i:i+2] = U.dot(B[i:i+2])
+
+		# Update Gram-Schmidt ortogonalized basis Bs and size-reduce B
+		Bs = Gram_Schmidt_orth(B)
+		size_reduce(B, Bs)
+
 
 if argv[0].endswith("sol2.py") or argv[0].endswith("ex2.py"):
 	verify_ex3(LLL, Gram_Schmidt_orth)
