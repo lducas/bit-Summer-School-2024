@@ -88,6 +88,7 @@ def test_ex3_nearest_plane(B):
             assert lhs <= rhs, "Point not nearest in lattice direction"
 
 plot_bases = [B2, B4, B24]
+
 @pytest.mark.parametrize("B", plot_bases)
 def test_ex4_compare_norm_distrb(B):
     compare_norm_distrib(B, 50000)

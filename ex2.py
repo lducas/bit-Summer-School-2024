@@ -104,7 +104,7 @@ def LLL(B, epsilon=0.01, anim=True):
 	# Size-reduce basis
 	Bs = Gram_Schmidt_orth(B)
 	size_reduce(B, Bs)
-
+	
 	while True:
 		yield [log(norm(x)) for x in Bs]		
 
