@@ -1,0 +1,196 @@
+\documentclass{article}
+\usepackage{amsmath}
+\usepackage{listings}
+\usepackage{xcolor}
+\usepackage{hyperref}
+\title{NumPy Reference Cheatsheet}
+\date{}
+
+\definecolor{codegray}{rgb}{0.95,0.95,0.95}
+\lstset{
+    backgroundcolor=\color{codegray},
+    basicstyle=\ttfamily\footnotesize,
+    frame=single,
+    breaklines=true,
+    keywordstyle=\color{blue},
+    commentstyle=\color{gray},
+    showstringspaces=false
+}
+
+\begin{document}
+\maketitle
+
+\section{Introduction}
+NumPy is the core numerical computing library in Python. It provides powerful tools for array operations, linear algebra, and random sampling.
+
+\section{Installation}
+To install NumPy, use pip:
+\begin{lstlisting}[language=bash]
+pip install numpy
+\end{lstlisting}
+
+\section{Importing NumPy}
+\begin{lstlisting}[language=Python]
+import numpy as np
+\end{lstlisting}
+
+\section{Array Creation and Initialization}
+\begin{lstlisting}[language=Python]
+import numpy as np
+
+# Float array
+a = np.array([1, 2, 3])
+
+# Integer array
+ai = np.array([1, 2, 3], dtype=int)
+
+# Zero matrix
+z = np.zeros((2, 3))
+
+# Ones matrix
+z = np.ones((2, 3))
+
+# Identity matrix
+I = np.eye(3)
+
+\end{lstlisting}
+
+
+\section{Array Attributes}
+\begin{lstlisting}[language=Python]
+a.shape     # Shape of array
+a.ndim      # Number of dimensions
+a.dtype     # Data type
+a.size      # Total number of elements
+\end{lstlisting}
+
+\section{Indexing and Slicing}
+\begin{lstlisting}[language=Python]
+a = np.array([10, 20, 30, 40, 50])
+
+# Access by index
+print(a[0])     # 10
+
+# Slice a subarray
+print(a[1:4])   # [20 30 40]
+
+# 2D array slicing
+b = np.array([[1, 2, 3], [4, 5, 6]])
+print(b[0, 1])  # 2
+print(b[:, 1])  # [2 5]
+print(b[1, :])  # [4 5 6]
+\end{lstlisting}
+
+\section{Looping with \texttt{range()} and \texttt{reversed(range())}}
+
+\subsection*{\texttt{range(stop)}}
+\begin{lstlisting}[language=Python]
+for i in range(5):
+    print(i)
+# Output: 0, 1, 2, 3, 4
+\end{lstlisting}
+
+\subsection*{\texttt{range(start, stop, step)}}
+\begin{lstlisting}[language=Python]
+for i in range(2, 10, 2):
+    print(i)
+# Output: 2, 4, 6, 8
+\end{lstlisting}
+
+\subsection*{\texttt{reversed(range(n))}}
+To loop backwards, use \texttt{reversed(range(n))}:
+\begin{lstlisting}[language=Python]
+for i in reversed(range(3)):
+    print(i)
+# Output: 2, 1, 0
+\end{lstlisting}
+
+\section{Linear Algebra Tools}
+
+\begin{lstlisting}[language=Python]
+
+# Element-wise operations
+x = np.array([1, 2, 3])
+y = np.array([4, 5, 6])
+
+print(x + y)        # [5 7 9]
+print(x * y)        # [4 10 18]
+
+# Define a matrix for the next examples
+A = np.array([[2, 1], 
+              [1, 3]])
+
+# Matrix-vector multiplication using @
+v = np.array([1, 0])
+result = A @ v      # [2 1]
+
+# Dot (inner) product of two vectors
+u = np.array([1, 2])
+w = np.array([3, 4])
+dot = u @ w         # 11
+
+# Transpose of a matrix
+A_t = np.transpose(A)
+
+\end{lstlisting}
+
+
+\subsection*{Linear algebra submodule numpy.linalg}
+
+\begin{lstlisting}[language=Python]
+
+# Solving linear systems: solve Ax = b
+A = np.array([[2, 1], [1, 3]])
+b = np.array([1, 2])
+x = np.linalg.solve(A, b)
+
+# Euclidean norm (L2 length) of a vector
+v = np.array([3, 4])
+length = np.linalg.norm(v)  # 5.0
+
+# Inverse of a matrix (if A is square)
+B = np.linalg.inv(A)
+
+\end{lstlisting}
+
+\section{Numerical Rounding and Comparison}
+
+\begin{lstlisting}[language=Python]
+x = np.array([1.499999, 2.500001])
+
+# Round elements to nearest integer
+xr = np.round(x)  # [1. 3.]
+
+# Test approximate equality (within tolerance)
+np.allclose(x, xr)  # False in this case
+\end{lstlisting}
+
+
+\section{Generating Random Vectors}
+\begin{lstlisting}[language=Python]
+n = 3
+
+# Generating random vectors
+v = np.random.rand(n)  # Random vector in [0, 1)^n
+
+# Centering in $[-0.5, 0.5)
+v_centered = np.random.rand(n) - 0.5
+
+# Sampling random (centered) vectors in a loop
+num_samples = 1000
+samples = [(np.random.rand(n) - 0.5) for _ in range(num_samples)]
+\end{lstlisting}
+
+
+\section{Other Useful NumPy Tools}
+\begin{itemize}
+  \item \texttt{np.copy(x)} — Make a safe copy
+  \item \texttt{np.mean(x)} — Average of elements
+  \item \texttt{np.sum(x)} — Total sum
+  \item \texttt{np.max(x)} — Maximum element
+\end{itemize}
+
+\section{Full documentation}
+This reference introduces the most commonly used NumPy features in computational linear algebra and random vector generation. For further learning, consult the official documentation: \url{https://numpy.org/doc/}
+
+\end{document}

@@ -1,0 +1,114 @@
+\documentclass[11pt]{article}
+\usepackage[margin=1in]{geometry}
+\usepackage{hyperref}
+\usepackage{listings}
+\usepackage{xcolor}
+
+\definecolor{codegray}{gray}{0.9}
+\lstset{
+    backgroundcolor=\color{codegray},
+    basicstyle=\ttfamily\footnotesize,
+    breaklines=true,
+    frame=single,
+    postbreak=\mbox{\textcolor{red}{$\hookrightarrow$}\space}
+}
+
+\title{Short GitHub Tutorial}
+\author{}
+\date{}
+
+\begin{document}
+
+\maketitle
+
+\section{Introduction}
+GitHub is a web-based platform for version control using Git. It allows users to collaborate on projects and track changes in code over time. We will use it in this course to keep track of the exercises and solutions.
+
+\section{Creating a GitHub Profile}
+If you don't have one already, start by creating your GitHub profile at \url{https://github.com}. Your GitHub profile serves as your public coding portfolio.
+
+\section{Setting Up Git}
+Before using GitHub, install Git from \url{https://git-scm.com} and set your user info:
+
+\begin{lstlisting}
+git config --global user.name "Your Name"
+git config --global user.email "you@example.com"
+\end{lstlisting}
+
+\section{Creating a New Repository}
+Go to \url{https://github.com}, log in, and click \texttt{New Repository}. Name it and choose options like \texttt{Initialize with README}.
+
+\section{Cloning a Repository}
+Clone a remote repo to your local machine:
+
+\begin{lstlisting}
+git clone https://github.com/username/repo-name.git
+\end{lstlisting}
+
+\section{Basic Workflow}
+Navigate to the repo folder:
+
+\begin{lstlisting}
+cd repo-name
+\end{lstlisting}
+
+\noindent Make changes, then use the following Git commands:
+
+\begin{lstlisting}
+git add .                % Stage all changes
+git commit -m "Message"  % Commit with message
+git push                 % Push to remote repo
+\end{lstlisting}
+
+\section{Pulling Changes}
+To update your local repo with remote changes:
+
+\begin{lstlisting}
+git pull
+\end{lstlisting}
+
+\section{Creating a Branch}
+Branches allow you to work on features independently:
+
+\begin{lstlisting}
+git checkout -b feature-branch
+\end{lstlisting}
+
+\section{Merging Branches}
+Switch back to main and merge your feature:
+
+\begin{lstlisting}
+git checkout main
+git merge feature-branch
+\end{lstlisting}
+
+\section{Course Repository}
+In this course, we will use the following GitHub repository:
+
+\begin{quote}
+\url{https://github.com/lducas/bit-Summer-School-2024/tree/main}
+\end{quote}
+
+\noindent Each student is required to:
+
+\begin{itemize}
+    \item Clone the repository to their local machine.
+    \item Create a personal branch named after themselves (e.g., \texttt{Mickey}).
+    \item Upload their solutions to the appropriate directories within their branch.
+\end{itemize}
+
+\noindent To create and switch to a personal branch:
+
+\begin{lstlisting}
+git checkout -b your-name
+\end{lstlisting}
+
+\noindent After adding your solutions and committing:
+
+\begin{lstlisting}
+git add .
+git commit -m "Add my solutions"
+git push origin your-name
+\end{lstlisting}
+
+\end{document}
