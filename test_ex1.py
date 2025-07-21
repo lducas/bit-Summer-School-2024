@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 from numpy import array
-from ex1 import (
+from sol1 import (
     iarray, in_lattice, simple_rounding,
     orth_proj, Gram_Schmidt_orth, nearest_plane,
     compare_norm_distrib
@@ -23,6 +23,7 @@ iarray([[50, 33, -30, 14], [0, 20, 4, -4], [1, 35, 0, -12], [-15, 3, 8, -7]])
 @pytest.mark.parametrize("B", bases)
 def test_ex1_simple_rounding(B):
     n, _ = B.shape
+
     for _ in range(20):
         x = 50 * (np.random.rand(n) - np.random.rand(n))
         xr = np.round(x)
@@ -51,6 +52,7 @@ def test_ex2a_orth_proj(n):
         # Test 2: inner product with x equals norm squared
         assert np.allclose(z.dot(x), z.dot(z)), "z·x != z·z"
 
+# SE: think about the tests
 @pytest.mark.parametrize("B", bases)
 def test_ex2b_gram_schmidt(B):
     Bs = Gram_Schmidt_orth(B)

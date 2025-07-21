@@ -3,19 +3,6 @@ from numpy import zeros, array
 from numpy.linalg import norm
 import matplotlib.pyplot as plt
 
-# You never need to unroll vector of matrix operation:
-# - x+y is the simple way to add vectors
-# - A @ B to multiply matrices or vectors, including inner products
-# - Most linear algebraic operations are provided in numpy, or numpy.linalg
-#   https://numpy.org/doc/stable/reference/routines.linalg.html
-# - coefficient-wise operation are also provided, such as np.round(x) to round each coordinate
-# - Doing so will be simpler, more readable, and much faster than writing a for loop
-
-#   ^
-#  /|\    When implementing, it is more common to use *row* notations (and faster...)
-# / | \   Do so. And beware on which side you are multiplying vectors and matrices !
-#/__*__\
-
 # The exercises comprises of function to be implemented (except Exercise 0):
 # Replace the keyword "pass" with your implementation of the desired function
 
@@ -77,10 +64,7 @@ def simple_rounding(B, t):
     :notes: Make use of numpy.linalg function solve and numpy function round.
     """
 
-	x = np.linalg.solve(B.transpose(), t)
-	xr = np.round(x)
-
-	return xr @ B
+	pass
 
 
 ############
@@ -90,10 +74,24 @@ def simple_rounding(B, t):
 ############
 
 def orth_proj(x, y):
-	""" Returns the orthogonal projection of vector x orthognally to vector y,
-	namely: x - <x,y>/<y,y> y"""
+	"""
+    Return the orthogonal projection of vector `x` orthogonally to vector `y`.
+
+    This computes the component of `x` that is orthogonal to `y`, using the formula:
+    x - (<x, y> / <y, y>) * y, where <·,·> denotes the dot product.
+
+    :param x: A NumPy array representing the vector to be projected.
+    :type x: numpy.ndarray
+    :param y: A NumPy array representing the direction vector.
+    :type y: numpy.ndarray
+
+    :return: The projection of `x` orthogonally to `y`.
+    :rtype: numpy.ndarray
+
+    :notes: Make use of the dot product via `@` operator. Assumes `y` is non-zero.
+    """
 	
-	return x - (x @ y) / (y @ y) * y
+	pass
 
 def Gram_Schmidt_orth(B):
 	"""
@@ -107,21 +105,11 @@ def Gram_Schmidt_orth(B):
              The i-th row of the output is the orthogonal to the span of previous basis vectors.
     :rtype: numpy.ndarray
 
-    :notes: 
+    :notes: Try to first write down the formula on a paper.
         
     """
 
-	# Get the dimension of the square basis
-	n,_ = B.shape
-
-	# Makes a copy of B, but change the type to float
-	Bs = array(B, dtype=float)
-
-	for i in range(n):
-		for j in range(i):
-			Bs[i] = orth_proj(Bs[i], Bs[j])
-
-	return Bs
+	pass
 
 
 ############
@@ -148,20 +136,10 @@ def nearest_plane(B, Bs, t):
     :rtype: numpy.ndarray
 
     :notes: Make use of numpy round() function and the built-in int() conversion.
+	(!) Copy t, to avoid modying the value of the function caller.
     """
 
-	n,d = B.shape
-
-	# copy t, to avoid modying the value of the function caller
-	e = np.copy(t)
-	v = zeros(d, dtype=int)
-
-	for i in reversed(range(n)):
-		k = int(np.round((e @ Bs[i]) / (Bs[i]@Bs[i])))
-		e -= k * B[i]
-		v += k * B[i]
-
-	return v
+	pass
 
 ############
 # Exercise 4
@@ -204,17 +182,5 @@ def compare_norm_distrib(B, num_samples):
     :notes: Make use of numpy.linalg function norm and numpy.random function rand
     """
 
-	n, _ = B.shape
-
-	# Calculate Gram-Schmidt orthogonalization of basis B
-	Bs = Gram_Schmidt_orth(B)
-
-	# Calculate num_samples samples from the distribution of Euclidean norm of points in the fundamental domain P(B)
-	data_SR = [np.linalg.norm((np.random.rand(n) - .5) @ B) for x in range(num_samples)]
-
-	# Calculate num_samples samples from the distribution of Euclidean norm of points in the fundamental domain P(Bs)
-	data_NP = [np.linalg.norm((np.random.rand(n) - .5) @ Bs) for x in range(num_samples)]
-	
-	# Plot the distributions
-	plot_two_hist(data_SR, data_NP, n)
+	pass
 
