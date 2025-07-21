@@ -63,7 +63,6 @@ def simple_rounding(B, t):
     """
 
 	x = np.linalg.solve(B.transpose(), t)
-	
 	xr = np.round(x)
 
 	return xr @ B
@@ -112,7 +111,6 @@ def Gram_Schmidt_orth(B):
     """
 
 	n,_ = B.shape
-
 	Bs = array(B, dtype=float)
 
 	for i in range(n):
@@ -199,15 +197,14 @@ def compare_norm_distrib(B, num_samples):
     :param num_samples: The number of random samples to generate from each distribution.
     :type num_samples: int
 
-    :notes: Make use of numpy.linalg function norm and numpy.random function rand
+    :notes: Make use of numpy.linalg function norm and numpy.random function rand, as well
+	as 
     """
 
 	n, _ = B.shape
-
 	Bs = Gram_Schmidt_orth(B)
 
 	data_SR = [np.linalg.norm((np.random.rand(n) - .5) @ B) for x in range(num_samples)]
-
 	data_NP = [np.linalg.norm((np.random.rand(n) - .5) @ Bs) for x in range(num_samples)]
 	
 	plot_two_hist(data_SR, data_NP, n)
