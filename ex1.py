@@ -32,18 +32,16 @@ def in_lattice(B, v):
     :rtype: bool
 
     :notes: Make use of numpy.linalg function solve and numpy functions round and allclose.
+	1. Write v in base B as x: x = B^T * v
+	2. Round to make it an integer vector. If v this indeed a lattice point,
+	this step should merely fix floating-point numerical errors.
+    3. Check equality up to some small tolerance
     """
 
-	# Write v in base B as x: x = B^T * v
-	x = np.linalg.solve(B.transpose(), v)
+    pass
+	
 
-	# Round to make it an integer vector. If v this indeed a lattice point,
-	# this step should merely fix floating-point numerical errors.
-	xr = np.round(x)
-
-	# Check equality up to some small tolerance
-	return np.allclose(x, xr)
-
+	
 ############
 # Exercise 1
 # Implement the Simple Rounding Algorithm 
