@@ -8,7 +8,7 @@ def gen_zeros(n, k):
 
 def gen_identity(n):
     """Create the identity matrix of size n x n."""
-    return np.eye(n)
+    return np.identity(n)
 
 
 def copy(X):

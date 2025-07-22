@@ -1,18 +1,12 @@
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
-from numpy import zeros, array
-from numpy.linalg import norm
 from sol1 import Gram_Schmidt_orth, nearest_plane
-from ver2 import verify_ex1, verify_ex2, verify_ex3
-from test_bases import B2, B4, B24
 from math import sqrt, log
-from random import randint
-from sys import argv
+from sys import exit
 
-def swap(x, y):
-    x[:], y[:] = y.copy(), x.copy()
-
+# The exercises comprises of function to be implemented (except Exercise 0):
+# Replace the keyword "pass" with your implementation of the desired function
 
 ############
 # Exercise 1
@@ -22,135 +16,162 @@ def swap(x, y):
 # than to B all along the algorithm.
 ############
 
-def lagrange_reduce(B, max_num_iter = 100):
-	""" Given a basis with two rows as input, apply lagrange reduction to B (modified 
-	in place). 
-	Also output the transformation matrix U, sending the initial basis to the final basis
-	"""
-	U = np.identity(2, dtype="int64")
+def lagrange_reduce(B):
+    """
+    Apply Lagrange reduction to a 2D lattice basis `B` in place.
 
-	for i in range(max_num_iter):
+    :param B: A NumPy array of shape (2, n) representing the lattice basis.
+              Each row is a basis vector.
+    :type B: numpy.ndarray
 
-		# swap rows
-		swap(B[0], B[1])
-		swap(U[0], U[1])
+    :returns: A 2x2 unimodular integer matrix `U` such that the reduced basis satisfies:
+              B_reduced = U @ B_original.
+              The input basis `B` is modified in place to its reduced form.
+    :rtype: numpy.ndarray
 
-		# calculate k
-		k = int(round(B[0].dot(B[1]) / B[0].dot(B[0])))
+    :raises ValueError: If the input array does not have exactly two row vectors.
 
-		# reduce rows
-		B[1] -= k * B[0]
-		U[1] -= k * U[0]
+    :notes: Make use of in-place swapping of rows, and int() conversion.
+    """
+    if B.shape[0] != 2:
+        raise ValueError("Input basis B must have exactly two vectors (2 rows).")
 
-		# exit condition
-		if norm(B[1]) >= norm(B[0]):
-			break
-	
-	return U
+    pass
 
-if argv[0].endswith("sol2.py") or argv[0].endswith("ex2.py"):
-	verify_ex1(lagrange_reduce)
+
+# def lagrange_reduce(B):
+# 	""" Given a basis with two rows as input, apply lagrange reduction to B (modified 
+# 	in place). 
+# 	Also output the transformation matrix U, sending the initial basis to the final basis
+# 	"""
+# 	U = np.identity(2, dtype="int64")
+# 	first = True
+# 	while first or np.linalg.norm(B[1]) < np.linalg.norm(B[0]):
+# 		B[[0, 1]] = B[[1, 0]]
+# 		U[[0, 1]] = U[[1, 0]]
+# 		first = False
+# 		k = int(round(B[0].dot(B[1]) / B[0].dot(B[0])))
+# 		B[1] -= k * B[0]
+# 		U[1] -= k * U[0]
+
+# 	return U
 
 
 ############
 # Exercise 2
-# Implement the Size-Reduction Algorithm (in place) on a basis input B. 
+# Implement a the Size-Reduction Algorithm (in place) on a basis input B. 
 # As a  by-product, provide as output the Gram-Schimdt orthogonalisation of B.
-#
-# Note: In the lecture notes, the NearestPlane is applied to a projection
-# pi_C'(b_n). This projection is unecessary (but make the proof nicer).
-# Ignore it in your implementation.
-# The lecture note also give the algorithm in a reccursive manner, but for
-# implementation in python, an iterative version will be much simpler
 ############
 
 def size_reduce(B, Bs):
-	""" Given a basis B and its Gram-Schmidt Bs, 
-	apply size reduction to B (modified in place). 
-	No return value.
 	"""
-	# Get the dimension number of vectors in the basis
-	n,_ = B.shape
-	
-	# Size-reduce basis
-	for i in range(n):
-		v = nearest_plane(B[:i], Bs[:i], B[i])
-		B[i] -= v
+    Apply size reduction to a lattice basis `B` using its Gram-Schmidt orthogonalization `Bs`.
 
-	return
+    :param B: A NumPy array of shape (n, m), representing the lattice basis.
+              Each row is a basis vector. This array is modified in place.
+    :type B: numpy.ndarray
 
-if argv[0].endswith("sol2.py") or argv[0].endswith("ex2.py"):
-	verify_ex2(size_reduce, Gram_Schmidt_orth)
+    :param Bs: A NumPy array of shape (n, m), representing the Gram-Schmidt orthogonalization
+               of `B`. Each row corresponds to the orthogonalized vector of the respective
+               row in `B`. This array is not modified.
+    :type Bs: numpy.ndarray
+
+    :return: This function modifies `B` in place and does not return a value.
+    :rtype: None
+
+    :notes: In the lecture notes, the NearestPlane is applied to a projection
+	pi_C'(b_n). This projection is unecessary (but make the proof nicer).
+	Ignore it in your implementation.
+	The lecture note also give the algorithm in a reccursive manner, but for
+	implementation in python, an iterative version will be much simpler
+    """
+	pass
+
 
 ############
 # Exercise 3
 # Implement the LLL algorithm. Beware that The Gram-Schmidt basis needs to be 
 # updated after every modification of B !
-# 
-# Note: at some point, you will need to apply lagrange to the basis 2-dimensional
-# basis [pi_i(b_i), pi_i(b_{i+1})]. This can be re-constructed rather cheaply from
-# B and B* by noting that:
-# pi_i(b_i) = b*_i and 
-# pi_i(b_{i+1}) = b*_{i+1} + (<b_i+1, b*_i> / ||b*_i||^2) * b*_i
 ############
 
-gamma_2 = sqrt(4/3)	
+def LLL(B, epsilon=0.01, gamma_2=sqrt(4/3), max_iter=1000, animate=True):
+	"""
+	Perform LLL (Lenstra–Lenstra–Lovász) lattice basis reduction.
 
+	:param B: A NumPy array of shape (n, m), where each row is a basis vector.
+	          This matrix is modified in place.
+	:type B: numpy.ndarray
 
-def LLL(B, epsilon=0.01, anim=True):
+	:param epsilon: A small positive float to relax the Lovász condition.
+	                Must satisfy 0 < epsilon < 1.
+	:type epsilon: float
 
-	n,_ = B.shape
+	:param gamma_2: The delta value in the Lovász condition (typically 0.75).
+	:type gamma_2: float
 
-	# Size-reduce basis
+	:param max_iter: Maximum number of LLL iterations before stopping.
+	:type max_iter: int
+
+	:param animate: If True, yields the logarithm of the norms of the orthogonal
+	                vectors at each iteration.
+	:type animate: bool
+
+	:return: None
+	:rtype: None
+
+	:notes: Note: at some point, you will need to apply lagrange to the basis 2-dimensional
+	basis [pi_i(b_i), pi_i(b_{i+1})]. This can be re-constructed rather cheaply from
+	B and B* by noting that:
+	pi_i(b_i) = b*_i and 
+	pi_i(b_{i+1}) = b*_{i+1} + (<b_i+1, b*_i> / ||b*_i||^2) * b*_i
+	"""
+	n, _ = B.shape
 	Bs = Gram_Schmidt_orth(B)
 	size_reduce(B, Bs)
-	
-	while True:
-		yield [log(norm(x)) for x in Bs]		
 
-		# Find an index to be Lagrange-reduced
-		for i in range(n):
-			# If no index is found, everything is already reduced
-			if i == n - 1:
-				return
-			if norm(Bs[i]) > (gamma_2 + epsilon) * norm(Bs[i+1]):
-				break
+	for _ in range(max_iter):
+		if animate:
+			yield [log(np.linalg.norm(v)) for v in Bs]
 
-		# Apply Lagrange to the basis 2-dimensional basis P = [pi_i(b_i), pi_i(b_{i+1})].
-		p1 = Bs[i]
-		p2 = Bs[i+1] + (B[i+1].dot(Bs[i]) / (Bs[i].dot(Bs[i]))) * Bs[i]
-		P = array([p1, p2])
+		pass
 
-		# Obtain U from the Lagrange reduction of P
-		U = lagrange_reduce(P)
-
-		# Obtain new basis vectors b_i and b_i+1
-		B[i:i+2] = U.dot(B[i:i+2])
-
-		# Update Gram-Schmidt ortogonalized basis Bs and size-reduce B
-		Bs = Gram_Schmidt_orth(B)
-		size_reduce(B, Bs)
+	raise RuntimeError("LLL did not converge within the maximum number of iterations.")
 
 
-if argv[0].endswith("sol2.py") or argv[0].endswith("ex2.py"):
-	verify_ex3(LLL, Gram_Schmidt_orth)
+
+# def LLL(B, epsilon=0.01, anim=True):
+# 	n,_ = B.shape
+# 	Bs = Gram_Schmidt_orth(B)
+# 	size_reduce(B, Bs)
+
+# 	while True:
+# 		yield [log(np.linalg.norm(x)) for x in Bs]
+# 		for i in range(n):
+# 			if i==n-1:
+# 				return
+# 			if np.linalg.norm(Bs[i]) > (gamma_2+epsilon) * np.linalg.norm(Bs[i+1]):
+# 				break
+# 		# We have found an index i to be Lagrange-reduced
+# 		x1 = np.copy(Bs[i])
+# 		x2 = Bs[i+1] + (B[i+1].dot(Bs[i]) / (Bs[i].dot(Bs[i]))) * Bs[i]
+# 		X = np.array([x1, x2])
+# 		U = lagrange_reduce(X)
+# 		B[i:i+2] = U.dot(B[i:i+2])
+# 		Bs = Gram_Schmidt_orth(B)
+# 		size_reduce(B, Bs)
 
 #############
 # Exercise 4
-# Add the following line to the beginning of your LLL loop above, and enjoy the show
-#
-# yield [log(norm(x)) for x in Bs]
-#
 #############
 
 def anim_LLL(n, q):
 	B = np.identity(n, dtype=int)
 	B[0, 0] = q
 	for i in range(1, n):
-		B[i, 0] = randint(0, q)
+		B[i, 0] = np.random.randint(0, q)
 
 	try:
-		data = list(LLL(B, anim=True))
+		data = list(LLL(B, animate=True))
 	except:
 		print("Exercise 4 Failed")
 		exit()
@@ -167,10 +188,4 @@ def anim_LLL(n, q):
 		line2.set_ydata(data[frame])
 		return line2
 
-	ani = animation.FuncAnimation(fig=fig,func=update_anim, frames=len(data), interval=50)
-	plt.show()
-	#ani.save("lll.gif", writer="pillow")
-
-
-if argv[0].endswith("sol2.py") or argv[0].endswith("ex2.py"):
-	anim_LLL(20, 999999)
+	return animation.FuncAnimation(fig=fig,func=update_anim, frames=len(data), interval=50)

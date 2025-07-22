@@ -181,7 +181,6 @@ def plot_two_hist(data_SR, data_NP, n, save=False):
 	plt.close()
 
 def compare_norm_distrib(B, num_samples):
-
 	"""
     Compare the distribution of vector norms in the fundamental domains of a basis `B`
     and its Gram-Schmidt orthogonalization `Bs`, by generating and plotting histograms.
