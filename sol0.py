@@ -1,10 +1,6 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-############
-# Exercise 0 — Arrays
-############
-
 def gen_zeros(n, k):
     """Create a zero matrix of size n x k."""
     return np.zeros((n, k))
@@ -32,14 +28,19 @@ def inverse(A):
     B = np.linalg.inv(A)
     return B
 
+def gen_rand(n, k, a, b):
+    """Generate a matrix of shape (n, k) with values in range [a, b)."""
+    return np.random.uniform(a, b, size=(n, k))
 
-def sum_l_rows(n, k, a, l):
+
+def sum_l_rows(n, k, a, b, l):
     """
-    Generate a random matrix of shape (n, k) with entries in [0, a),
+    Generate a random matrix of shape (n, k) with entries in [a, b),
     then return the sum of the first l rows.
     """
     assert l <= n, "Parameter l must be <= n."
-    A = gen_rand(n, k, a)
+    
+    A = gen_rand(n, k, a, b)
     return np.sum(A[:l], axis=0, keepdims=True)
 
 
@@ -59,42 +60,27 @@ def gen_struct_mat(n, k):
     for i in reversed(range(n)):
         for j in range(k):
             A[i][j] = n - i + 2 * j
+
+    print(A)
     return A
 
-############
-# Exercise 1 — Random generation
-############
-
-def gen_rand(n, k, q):
-    """Generate a random matrix with values in [0, q)."""
-    return q * np.random.rand(n, k)
-
-
-def gen_rand_centered(n, k, q):
-    """Generate a random matrix with values in [-q, q)."""
-    return q * (np.random.rand(n, k) - 0.5) * 2
-
-############
-# Exercise 2 — Linear Algebra
-############
-
-def inner_product(n, k, q):
+def inner_product(n, k, a, b):
     """
     Create a random vector of shape (1, n) and matrix of shape (n, k),
-    both with values in [-q, q), and return their matrix product (1 x k).
+    both with values in [a, b), and return their matrix product (1 x k).
     """
-    x = gen_rand_centered(1, n, q)
-    A = gen_rand_centered(n, k, q)
+    x = gen_rand(1, n, a, b)
+    A = gen_rand(n, k, a, b)
     return x @ A
 
 
-def solv_lineq(n, q):
+def solv_lineq(n, a, b):
     """
     Solve a linear system Ax = b, where A is a random n x n matrix
-    and b is a random n x 1 vector with entries in [-q, q).
+    and b is a random n x 1 vector with entries in [a, b).
     """
-    A = gen_rand_centered(n, n, q)
-    b = gen_rand_centered(n, 1, q)
+    A = gen_rand(n, n, a, b)
+    b = gen_rand(n, 1, a, b)
     return np.linalg.solve(A, b)
 
 

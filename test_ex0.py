@@ -4,8 +4,7 @@ from itertools import product
 from numpy import array
 from sol0 import (
     gen_zeros, gen_identity, copy, transpose, inverse, sum_l_rows,
-    gen_struct_mat, gen_rand, gen_rand_centered, inner_product,
-    solv_lineq, get_rref
+    gen_struct_mat, gen_rand, inner_product, solv_lineq, get_rref
 )
 
 def is_rref(A, tol=1e-8):
@@ -45,15 +44,16 @@ def is_rref(A, tol=1e-8):
 n_values = [3, 5, 10]
 k_values = [3, 4, 6]
 q_values = [2, 3, 5]
-a_values = [0.5, 0.8]
+a_values = [0.3, 0.5]
+b_values = [0.8, 1]
 l_values = [2, 3]
 
 # ========== Generate All Parameter Combinations ==========
 
 test_cases_nk = list(product(n_values, k_values))
-test_cases_nkq = list(product(n_values, k_values, q_values))
-test_cases_nkal = list(product(n_values, k_values, a_values, l_values))
-test_cases_nq = list(product(n_values, q_values))
+test_cases_nkab = list(product(n_values, k_values, a_values, b_values))
+test_cases_nab = list(product(n_values, a_values, b_values))
+test_cases_nkabl = list(product(n_values, k_values, a_values, b_values, l_values))
 
 # ========== Random Matrices ==========
 
@@ -118,18 +118,26 @@ def test_transpose(X):
 
 
 @pytest.mark.parametrize("A", matrices_inverse)
-def test_get_inverse(A):
+def test_inverse(A):
     A_inv = inverse(A)
     I = np.eye(A.shape[0])
     assert np.allclose(A @ A_inv, I, atol=1e-5)
     assert np.allclose(A_inv @ A, I, atol=1e-5)
 
+@pytest.mark.parametrize("n,k,a,b", test_cases_nkab)
+def test_gen_rand(n, k, a, b):
+    R = gen_rand(n, k, a, b)
+    assert R.shape == (n, k)
+    assert np.all(R >= a)
+    assert np.all(R < b)
 
-@pytest.mark.parametrize("n,k,a,l", test_cases_nkal)
-def test_sum_l_rows(n, k, a, l):
-    result = sum_l_rows(n, k, a, l)
+
+@pytest.mark.parametrize("n,k,a,b,l", test_cases_nkabl)
+def test_sum_l_rows(n, k, a, b, l):
+    result = sum_l_rows(n, k, a, b, l)
     assert result.shape == (1, k)
-    assert np.all(result >= 0)
+    assert np.all(result > a)
+    assert np.all(result < l * b)
 
 
 @pytest.mark.parametrize("n,k", test_cases_nk)
@@ -139,34 +147,20 @@ def test_gen_struct_mat(n, k):
     for i in range(n):
         for j in range(k - 1):
             assert np.isclose(A[i, j+1] - A[i, j], 2)
+            if i < n - 1:
+                assert np.isclose(A[i, j] - A[i + 1, j], 1)
 
 
-@pytest.mark.parametrize("n,k,q", test_cases_nkq)
-def test_gen_rand(n, k, q):
-    R = gen_rand(n, k, q)
-    assert R.shape == (n, k)
-    assert np.all(R >= 0)
-    assert np.all(R < q)
-
-
-@pytest.mark.parametrize("n,k,q", test_cases_nkq)
-def test_gen_rand_centered(n, k, q):
-    R = gen_rand_centered(n, k, q)
-    assert R.shape == (n, k)
-    assert np.all(R >= -q)
-    assert np.all(R < q)
-
-
-@pytest.mark.parametrize("n,k,q", test_cases_nkq)
-def test_inner_product(n, k, q):
-    result = inner_product(n, k, q)
+@pytest.mark.parametrize("n,k,a,b", test_cases_nkab)
+def test_inner_product(n, k, a, b):
+    result = inner_product(n, k, a, b)
     assert result.shape == (1, k)
     assert isinstance(result, np.ndarray)
 
 
-@pytest.mark.parametrize("n,q", test_cases_nq)
-def test_solv_lineq(n, q):
-    x = solv_lineq(n, q)
+@pytest.mark.parametrize("n,a,b", test_cases_nab)
+def test_solv_lineq(n, a, b):
+    x = solv_lineq(n, a, b)
     assert x.shape == (n, 1)
     assert isinstance(x, np.ndarray)
 

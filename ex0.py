@@ -1,15 +1,10 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# Replace 'pass' with your implementation in each exercise.
-
-############
-# Exercise 0 — Arrays
-############
-
 def gen_zeros(n, k):
     """Create a zero matrix of size n x k."""
     pass
+
 
 def gen_identity(n):
     """Create the identity matrix of size n x n."""
@@ -32,9 +27,14 @@ def inverse(A):
     
     pass
 
-def sum_l_rows(n, k, a, l):
+def gen_rand(n, k, a, b):
+    """Generate a matrix of shape (n, k) with values in range [a, b)."""
+    pass
+
+
+def sum_l_rows(n, k, a, b, l):
     """
-    Generate a random matrix of shape (n, k) with entries in [0, a),
+    Generate a random matrix of shape (n, k) with entries in [a, b),
     then return the sum of the first l rows.
     """
     assert l <= n, "Parameter l must be <= n."
@@ -56,34 +56,18 @@ def gen_struct_mat(n, k):
     """
     pass
 
-############
-# Exercise 1 — Random generation
-############
-
-def gen_rand(n, k, q):
-    """Generate a random matrix with values in [0, q)."""
-    pass
-
-def gen_rand_centered(n, k, q):
-    """Generate a random matrix with values in [-q, q)."""
-    pass
-
-############
-# Exercise 2 — Linear Algebra
-############
-
-def inner_product(n, k, q):
+def inner_product(n, k, a, b):
     """
     Create a random vector of shape (1, n) and matrix of shape (n, k),
-    both with values in [-q, q), and return their matrix product (1 x k).
+    both with values in [a, b), and return their matrix product (1 x k).
     """
     pass
 
 
-def solv_lineq(n, q):
+def solv_lineq(n, a, b):
     """
     Solve a linear system Ax = b, where A is a random n x n matrix
-    and b is a random n x 1 vector with entries in [-q, q).
+    and b is a random n x 1 vector with entries in [a, b).
     """
     pass
 
