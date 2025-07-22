@@ -5,17 +5,10 @@ import matplotlib.pyplot as plt
 # The exercises comprises of function to be implemented (except Exercise 0):
 # Replace the keyword "pass" with your implementation of the desired function
 
-
 ############ 
 # Exercise 0
-# Read the following utility function and test to get use to python an numpy
-# syntax and objects
+# Warm-up: Lattices
 ############
-
-# By default, arrays are float in numpy. The following is a shortener to
-# construct integer arrays.
-def iarray(x):
-	return array(x, dtype=int)
 
 def in_lattice(B, v):
 	"""
@@ -31,15 +24,14 @@ def in_lattice(B, v):
     :rtype: bool
 
     :notes: Make use of numpy.linalg function solve and numpy functions round and allclose.
-	1. Write v in base B as x: x = B^T * v
+	1. Write v in base B as x: x = B^T * v .
 	2. Round to make it an integer vector. If v this indeed a lattice point,
 	this step should merely fix floating-point numerical errors.
-    3. Check equality up to some small tolerance
+    3. Check equality up to some small tolerance.
     """
 
 	x = np.linalg.solve(B.transpose(), v)
 	xr = np.round(x)
-
 	return np.allclose(x, xr)
 
 ############
@@ -64,7 +56,6 @@ def simple_rounding(B, t):
 
 	x = np.linalg.solve(B.transpose(), t)
 	xr = np.round(x)
-
 	return xr @ B
 
 
@@ -106,8 +97,12 @@ def Gram_Schmidt_orth(B):
              The i-th row of the output is the orthogonal to the span of previous basis vectors.
     :rtype: numpy.ndarray
 
-    :notes: Try to first write down the formula on a paper.
-        
+    :notes: Verify the following properties:
+	1. The first Gram-Schmidt orthogonalization vector is the first basis vector.
+	2. Span of the first i rows of the Gram-Schmidt orthogonalized basis is the same as the span
+	of the first i rows of the lattice basis B.
+	3. All Gram-Schmidt orthogonalized vectors are pairwise orthogonal.
+	4. Each Gram-Schmidt orthogonalized vector is orthogonal to all the previous basis vectors.        
     """
 
 	n,_ = B.shape
