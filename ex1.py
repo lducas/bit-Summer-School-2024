@@ -15,8 +15,6 @@ import matplotlib.pyplot as plt
 
 # By default, arrays are float in numpy. The following is a shortener to
 # construct integer arrays.
-def iarray(x):
-	return array(x, dtype=int)
 
 def in_lattice(B, v):
 	"""
@@ -37,7 +35,7 @@ def in_lattice(B, v):
 	this step should merely fix floating-point numerical errors.
     3. Check equality up to some small tolerance
     """
-
+	
     pass
 	
 
