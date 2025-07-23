@@ -51,7 +51,7 @@ z = np.zeros((2, 3))
 z = np.ones((2, 3))
 
 # Identity matrix
-I = np.eye(3)
+I = np.identity(3)
 
 \end{lstlisting}
 
@@ -64,7 +64,7 @@ a.dtype     # Data type
 a.size      # Total number of elements
 \end{lstlisting}
 
-\section{Indexing and Slicing}
+\section{Indexing, Slicing and Swapping}
 \begin{lstlisting}[language=Python]
 a = np.array([10, 20, 30, 40, 50])
 
@@ -79,6 +79,14 @@ b = np.array([[1, 2, 3], [4, 5, 6]])
 print(b[0, 1])  # 2
 print(b[:, 1])  # [2 5]
 print(b[1, :])  # [4 5 6]
+
+# Row swapping in 2D arrays
+b[0], b[1] = b[1].copy(), b[0].copy()
+print(b)
+# Output:
+# [[4 5 6]
+#  [1 2 3]]
+
 \end{lstlisting}
 
 \section{Looping with \texttt{range()} and \texttt{reversed(range())}}
@@ -170,16 +178,22 @@ np.allclose(x, xr)  # False in this case
 \begin{lstlisting}[language=Python]
 n = 3
 
-# Generating random vectors
+# Generating random vectors using np.random.rand
 v = np.random.rand(n)  # Random vector in [0, 1)^n
 
-# Centering in $[-0.5, 0.5)
-v_centered = np.random.rand(n) - 0.5
+# Using np.random.uniform for more control over range
+v_uniform = np.random.uniform(low=-10.0, high=5.0, size=n)  # Random vector in [-10, 5)
 
-# Sampling random (centered) vectors in a loop
-num_samples = 1000
-samples = [(np.random.rand(n) - 0.5) for _ in range(num_samples)]
+# Using np.random.randint for integer-valued vectors
+v_int = np.random.randint(low=-10, high=5, size=n)  # Random integers in [-10, 5)
+
+# Sampling using uniform distribution in a loop
+samples_uniform = [np.random.uniform(-1.0, 1.0, size=n) for _ in range(num_samples)]
+
+# Sampling integer vectors in a loop
+samples_int = [np.random.randint(0, 10, size=n) for _ in range(num_samples)]
 \end{lstlisting}
+
 
 
 \section{Other Useful NumPy Tools}
