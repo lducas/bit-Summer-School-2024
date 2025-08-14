@@ -12,7 +12,7 @@ def iarray(x):
 
 def in_span(A, v):
     x = np.linalg.solve(A.T, v)
-    return np.allclose(A.T @ x, v)
+    return np.allclose(x @ A, v)
 
 # All test bases
 bases = [

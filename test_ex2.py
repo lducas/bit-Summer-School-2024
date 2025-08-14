@@ -7,7 +7,6 @@ import matplotlib
 
 # Set random seed for reproducibility
 np.random.seed(42)
-np.random.seed(42)
 
 from sol2 import lagrange_reduce, size_reduce, LLL, anim_LLL
 from sol1 import Gram_Schmidt_orth, in_lattice
