@@ -1,226 +1,372 @@
 import numpy as np
 import matplotlib.pyplot as plt
-import matplotlib.animation as animation
-from sol1 import Gram_Schmidt_orth, nearest_plane
-from math import sqrt, log
-from sys import exit
+from time import sleep
+from sol1 import simple_rounding, orth_proj, in_lattice
+from generic_functions import generate_lattice_points
+
+# The exercises comprises of function to be implemented: replace the keyword "pass"
+# with your implementation.
 
 ############
 # Exercise 1
-# Implement Lagrange reduction Algorithm. The algorithm should output
-# the 2x2 Unimodular transformation matrix U. To do so, start with U
-# being the identity matrix, and apply the same transformation to U
-# than to B all along the algorithm.
+# Enumerate lattice vectors within a ball of radius r
 ############
 
-def lagrange_reduce(B):
+def enumerate(x, r):
     """
-    Apply Lagrange reduction to a 2D lattice basis `B` in place.
+    Return all integer vectors in Z^n whose coordinates differ from `x`
+    by at most `r` (per coordinate).
 
-    :param B: A NumPy array of shape (2, n) representing the lattice basis.
-              Each row is a basis vector.
-    :type B: numpy.ndarray
+    :param t: A NumPy array representing the vector `x`.
+    :type t: numpy.ndarray
+    :param l: An integer or float representing the distance `r`.
+    :type l: int or float
 
-    :returns: A 2x2 unimodular integer matrix `U` such that the reduced basis satisfies:
-              B_reduced = U @ B_original.
-              The input basis `B` is modified in place to its reduced form.
-    :rtype: numpy.ndarray
+    :return: A list of lattice vectors in Z^n whose coordinates are
+    within distance `r` (per coordinate) from `x`.
+    :rtype: list of numpy.ndarray
 
-    :raises ValueError: If the input array does not have exactly two row vectors.
-
-    :notes: Make use of in-place swapping of rows, and int() conversion.
+    :notes: Make use of numpy concatenate() function and the built-in append function.
     """
-    if B.shape[0] != 2:
-        raise ValueError("Input basis B must have exactly two vectors (2 rows).")
 
-    U = np.identity(2, dtype=np.int64)
-    first_iteration = True
+    # Base case: no dimensions left
+    if len(x) == 0:
+        return [np.array([], dtype=int)]
+    
+    results = []
 
-    while first_iteration or np.linalg.norm(B[1]) < np.linalg.norm(B[0]):
-        # Swap rows using tuple unpacking and explicit copies for clarity and safety
-        B[0], B[1] = B[1].copy(), B[0].copy()
-        U[0], U[1] = U[1].copy(), U[0].copy()
+    # Loop over all integer coordinates within ±r of t[0]
+    lower = int(np.ceil(x[0] - r))
+    upper = int(np.ceil(x[0] + r))
 
-        first_iteration = False
+    for coord in range(lower, upper):
+        # Recursively enumerate for the rest of the coordinates
+        for sub_result in enumerate(x[1:], r):
+            # Create a new vector by prepending the current coordinate
+            vec = np.concatenate(([coord], sub_result))
+            results.append(vec)
 
-        # Perform size reduction on B[1] with respect to B[0]
-        k = int(np.round((B[0] @ B[1]) / (B[0] @ B[0])))
-
-        if k != 0:
-            B[1] -= k * B[0]
-            U[1] -= k * U[0]
-
-    return U
-
-
-# def lagrange_reduce(B):
-# 	""" Given a basis with two rows as input, apply lagrange reduction to B (modified 
-# 	in place). 
-# 	Also output the transformation matrix U, sending the initial basis to the final basis
-# 	"""
-# 	U = np.identity(2, dtype="int64")
-# 	first = True
-# 	while first or np.linalg.norm(B[1]) < np.linalg.norm(B[0]):
-# 		B[[0, 1]] = B[[1, 0]]
-# 		U[[0, 1]] = U[[1, 0]]
-# 		first = False
-# 		k = int(round(B[0].dot(B[1]) / B[0].dot(B[0])))
-# 		B[1] -= k * B[0]
-# 		U[1] -= k * U[0]
-
-# 	return U
-
+    return results
 
 ############
 # Exercise 2
-# Implement a the Size-Reduction Algorithm (in place) on a basis input B. 
-# As a  by-product, provide as output the Gram-Schimdt orthogonalisation of B.
+# Implement the Simple Enumeration Algorithm 
 ############
 
-def size_reduce(B, Bs):
-	"""
-    Apply size reduction to a lattice basis `B` using its Gram-Schmidt orthogonalization `Bs`.
-
-    :param B: A NumPy array of shape (n, m), representing the lattice basis.
-              Each row is a basis vector. This array is modified in place.
-    :type B: numpy.ndarray
-
-    :param Bs: A NumPy array of shape (n, m), representing the Gram-Schmidt orthogonalization
-               of `B`. Each row corresponds to the orthogonalized vector of the respective
-               row in `B`. This array is not modified.
-    :type Bs: numpy.ndarray
-
-    :return: This function modifies `B` in place and does not return a value.
-    :rtype: None
-
-    :notes: In the lecture notes, the NearestPlane is applied to a projection
-	pi_C'(b_n). This projection is unecessary (but make the proof nicer).
-	Ignore it in your implementation.
-	The lecture note also give the algorithm in a reccursive manner, but for
-	implementation in python, an iterative version will be much simpler
+def simple_enumeration(B, t, l):
     """
-	# Get the dimension number of vectors in the basis
-	n,_ = B.shape
-	for i in range(n):
-		v = nearest_plane(B[:i], Bs[:i], B[i])
-		B[i] -= v
-	return
+	Return a lattice vector close to the target vector `t`, using the Simple Enumeration algorithm.
 
+	:param B: A square (n x n) NumPy array representing a lattice basis.
+	:type B: numpy.ndarray
+	:param t: A NumPy array representing the target vector to approximate with a lattice point.
+	:type t: numpy.ndarray
+	:param l: An integer value representing the fundamental domain scaling.
+	:type l: int
+
+	:return: A lattice vector in the lattice generated by `B` that is close to `t`.
+	:rtype: numpy.ndarray
+
+	:notes: Make use of numpy.linalg function solve and numpy function round.
+	"""
+
+    # Initialize the best lattice vector found so far
+    c = np.ndarray(t.shape, dtype=int)
+    c.fill(np.iinfo(int).max)
+	
+    # Enumerate integer coordinate vectors v inside an l/2 ball around x
+    # Note: make us of enumeration_Zn_ball() that was pereviously implemented
+    x = np.linalg.solve(B.transpose(), t)
+    enum = enumerate(x, l / 2)
+
+    assert enum, "Enumeration returned None, expected a list of vectors."
+	
+    # For each v in the ball, project it into the lattice and check if the
+    # corresponding lattice vetor is closer to t than the current best candidate
+    for v in enum:
+        y = v @ B
+        if np.linalg.norm(y - t) < np.linalg.norm(c - t):
+            c = y
+	
+	# Step 5: Return the closest lattice vector found
+    return c
 
 ############
 # Exercise 3
-# Implement the LLL algorithm. Beware that The Gram-Schmidt basis needs to be 
-# updated after every modification of B !
+# Implement the Fincke-Pohst Enumeration Subroutine
 ############
 
-def LLL(B, epsilon=0.01, gamma_2=sqrt(4/3), max_iter=1000, animate=True):
-	"""
-	Perform LLL (Lenstra–Lenstra–Lovász) lattice basis reduction.
+def fincke_pohst_subroutine(b1, x, t, r):
+    """
+    Enumerate all lattice points along the line spanned by the basis vector `b1`
+    that lie within a Euclidean distance `r` from the target vector `t`.
 
-	:param B: A NumPy array of shape (n, m), where each row is a basis vector.
-	          This matrix is modified in place.
-	:type B: numpy.ndarray
+    :param b1: The first basis vector of the lattice, given in Euclidean coordinates.
+    :type b1: numpy.ndarray
+    :param x: The current partial lattice vector (from higher dimensions) in Euclidean coordinates.
+    :type x: numpy.ndarray
+    :param t: The target vector in Euclidean coordinates.
+    :type t: numpy.ndarray
+    :param r: Search radius. Only lattice points within distance `r` from `t` are enumerated.
+    :type r: float
 
-	:param epsilon: A small positive float to relax the Lovász condition.
-	                Must satisfy 0 < epsilon < 1.
-	:type epsilon: float
+    :return: A list of lattice points (NumPy arrays) along the `b1` direction 
+             that satisfy the radius constraint.
+    :rtype: list[numpy.ndarray]
+    """
 
-	:param gamma_2: The delta value in the Lovász condition (typically 0.75).
-	:type gamma_2: float
+    results = []
 
-	:param max_iter: Maximum number of LLL iterations before stopping.
-	:type max_iter: int
+    # Compute the offset
+    offset = ((x - t) @ b1) / (b1 @ b1)
 
-	:param animate: If True, yields the logarithm of the norms of the orthogonal
-	                vectors at each iteration.
-	:type animate: bool
+    # Positive direction
+    i = 1
+    while np.linalg.norm((offset + i) * b1) <= r:
+        results.append(x + i * b1)
+        i += 1
 
-	:return: None
-	:rtype: None
+    # Negative direction
+    i = -1
+    while np.linalg.norm((offset + i) * b1) <= r:
+        results.append(x + i * b1)
+        i -= 1
 
-	:notes: Note: at some point, you will need to apply lagrange to the basis 2-dimensional
-	basis [pi_i(b_i), pi_i(b_{i+1})]. This can be re-constructed rather cheaply from
-	B and B* by noting that:
-	pi_i(b_i) = b*_i and 
-	pi_i(b_{i+1}) = b*_{i+1} + (<b_i+1, b*_i> / ||b*_i||^2) * b*_i
-	"""
-	n, _ = B.shape
-	Bs = Gram_Schmidt_orth(B)
-	size_reduce(B, Bs)
+    return results
 
-	for _ in range(max_iter):
-		if animate:
-			yield [log(np.linalg.norm(v)) for v in Bs]
-
-		# Search for index i violating the Lovász condition
-		for i in range(n):
-			if i == n-1:
-				return
-			if np.linalg.norm(Bs[i]) > (gamma_2 + epsilon) * np.linalg.norm(Bs[i + 1]):
-				break
-
-		# Perform local Lagrange reduction on pair (i, i+1)
-		x1 = Bs[i]
-		x2 = Bs[i + 1] + ((B[i + 1] @ Bs[i]) / (Bs[i] @ Bs[i])) * Bs[i]
-		X = np.array([x1, x2])
-
-		U = lagrange_reduce(X)
-		B[i:i + 2] = U @ B[i:i + 2]
-
-		Bs = Gram_Schmidt_orth(B)
-		size_reduce(B, Bs)
-
-	raise RuntimeError("LLL did not converge within the maximum number of iterations.")
-
-
-
-# def LLL(B, epsilon=0.01, anim=True):
-# 	n,_ = B.shape
-# 	Bs = Gram_Schmidt_orth(B)
-# 	size_reduce(B, Bs)
-
-# 	while True:
-# 		yield [log(np.linalg.norm(x)) for x in Bs]
-# 		for i in range(n):
-# 			if i==n-1:
-# 				return
-# 			if np.linalg.norm(Bs[i]) > (gamma_2+epsilon) * np.linalg.norm(Bs[i+1]):
-# 				break
-# 		# We have found an index i to be Lagrange-reduced
-# 		x1 = np.copy(Bs[i])
-# 		x2 = Bs[i+1] + (B[i+1].dot(Bs[i]) / (Bs[i].dot(Bs[i]))) * Bs[i]
-# 		X = np.array([x1, x2])
-# 		U = lagrange_reduce(X)
-# 		B[i:i+2] = U.dot(B[i:i+2])
-# 		Bs = Gram_Schmidt_orth(B)
-# 		size_reduce(B, Bs)
-
-#############
+############
 # Exercise 4
-#############
+# Implement the Fincke-Pohst Enumeration Algorithm
+############
 
-def anim_LLL(n, q):
-	B = np.identity(n, dtype=int)
-	B[0, 0] = q
-	for i in range(1, n):
-		B[i, 0] = np.random.randint(0, q)
+def fincke_pohst_enumeration(B, t, r):
+    """
+    Enumerate all lattice vectors within distance `r` from `t`
+    in the lattice defined by basis `B`.
 
-	try:
-		data = list(LLL(B, animate=True))
-	except:
-		print("Exercise 4 Failed")
-		exit()
+    :param B: A square (n x n) NumPy array representing a lattice basis (rows are basis vectors).
+    :type B: numpy.ndarray
+    :param t: A NumPy array representing the target vector to approximate with a lattice point.
+    :type t: numpy.ndarray
+    :param r: An integer or float representing the search radius.
+    :type r: int or float
 
-	for i in range(40):
-		data.append(data[-1])
+    :return: A list of lattice vectors within the specified distance from `t`.
+    :rtype: list[numpy.ndarray]
+    """
 
-	fig, ax = plt.subplots()
-	line2 = ax.plot(range(n), data[0], label="basis profile")[0]
-	ax.set(xlim=[0, n], ylim=[0, log(q)/4])
-	ax.legend()
+    n = B.shape[0]
 
-	def update_anim(frame):
-		line2.set_ydata(data[frame])
-		return line2
+    # Base case: 1D lattice
+    if n == 1:
+        return fincke_pohst_subroutine(B[0], np.zeros_like(t), t, r)
 
-	return animation.FuncAnimation(fig=fig,func=update_anim, frames=len(data), interval=50)
+    # First basis vector
+    b1 = B[0]
+
+    # Build sub-basis orthogonal to b1
+    B_sub = np.array([orth_proj(B[i], b1) for i in range(1, n)])
+    B_sub = B_sub[:, 1:]
+
+    # Project target vector orthogonal to b1
+    t_sub = orth_proj(t, b1)
+    t_sub = t_sub[1:]  
+
+    # Recursively enumerate in subspace
+    sub_results = fincke_pohst_enumeration(B_sub, t_sub, r)
+
+    results = []
+
+    # For each partial sum in subspace, enumerate multiples along b1
+    for s in sub_results:
+
+        # Remaining radius after placing s
+        ro = np.sqrt(r**2 - np.linalg.norm(s - t_sub)**2)
+
+        # Lift s back into full space (padding with a 0 in the first coord)
+        y = np.linalg.solve(B_sub.T, s)
+        x = np.concatenate(([0], y)) @ B
+
+        assert in_lattice(B, x), f"Vector {x} is not in the lattice generated by B"
+
+        # Enumerate multiples along b1 around x
+        res = fincke_pohst_subroutine(b1, x, t, ro)
+        if res:
+            results.extend(fincke_pohst_subroutine(b1, x, t, ro))
+
+    return results
+    
+
+############
+# Helper functions
+############
+
+def draw_basis_vectors(B):
+    """
+    Draw basis vectors.
+
+    Parameters
+    ----------
+    B : np.ndarray
+        2×2 basis matrix (rows are basis vectors).
+    """
+    b1 = B[0, :]
+    b2 = B[1, :]
+
+    arrow_style = dict(
+        head_width=0.3,
+        head_length=0.3,
+        fc="blue", ec="blue",
+        length_includes_head=True
+    )
+
+    plt.arrow(0, 0, b1[0], b1[1], **arrow_style)
+    plt.arrow(0, 0, b2[0], b2[1], **arrow_style)
+
+
+def draw_fundamental_regions(B, xlim, ylim, color1="lightgray", color2="white", alpha=0.8, outline=True):
+    """
+    Draw checkerboard-style centered fundamental parallelograms over the given bounds.
+
+    Parameters
+    ----------
+    B : np.ndarray
+        2×2 basis matrix (rows are basis vectors).
+    xlim, ylim : tuple
+        Horizontal and vertical plot limits in Euclidean coords.
+    """
+    B = np.asarray(B, dtype=float)
+
+    # Basis vectors (rows)
+    b1 = B[0, :]
+    b2 = B[1, :]
+
+    # Offsets for the centered fundamental region: ±½ b1 ± ½ b2 (closed loop)
+    offsets = np.vstack([
+        -0.5*b1 - 0.5*b2,
+         0.5*b1 - 0.5*b2,
+         0.5*b1 + 0.5*b2,
+        -0.5*b1 + 0.5*b2,
+        -0.5*b1 - 0.5*b2
+    ])
+
+    # Map plot-box corners to lattice coordinates
+    box = np.array([
+        [xlim[0], ylim[0]],
+        [xlim[0], ylim[1]],
+        [xlim[1], ylim[0]],
+        [xlim[1], ylim[1]],
+    ], dtype=float)
+
+    # lattice coords of the 4 corners: solve [i,j] @ B = [x,y]
+    box_lat = np.linalg.solve(B.T, box.T).T
+    i_min = int(np.floor(box_lat[:, 0].min())) - 1
+    i_max = int(np.ceil (box_lat[:, 0].max())) + 1
+    j_min = int(np.floor(box_lat[:, 1].min())) - 1
+    j_max = int(np.ceil (box_lat[:, 1].max())) + 1
+
+    # Tile cells
+    for i in range(i_min, i_max + 1):
+        for j in range(j_min, j_max + 1):
+            # Center of this cell in Euclidean coordinates
+            center = np.array([i, j]) @ B
+
+            # Alternate fill by parity in lattice coords
+            color = color1 if ((i + j) % 2 == 0) else color2
+
+            poly = center + offsets
+            plt.fill(poly[:, 0], poly[:, 1], color=color, alpha=alpha, zorder=0)
+            if outline:
+                plt.plot(poly[:, 0], poly[:, 1], color="gray", linewidth=0.6, zorder=1)
+            
+
+def run_lattice_demo(B, t, l):
+    print(f"\n=== Running for Basis:\n{B} ===")
+    print("Target vector:", t)
+
+    # Simple rounding
+    print("\nRunning simple rounding...")
+    rounding_vec = simple_rounding(B, t)
+    print("Closest lattice vector (rounding):", rounding_vec)
+
+    # Simple enumeration
+    print("\nRunning simple enumeration...")
+    simple_enum_vec = simple_enumeration(B, t, l)
+    print("Closest lattice vector (enumeration):", simple_enum_vec)
+
+    # Fincke-Phost enumeration
+    print("\nRunning Fincke-Phost enumeration...")
+    fincke_pohst_enum_vec = min(fincke_pohst_enumeration(B, t, 2*l), key=lambda v: np.linalg.norm(np.array(v) - t))
+    print("Closest lattice vector (Fincke-Phost enumeration):", fincke_pohst_enum_vec)
+
+    # Determine plotting bounds dynamically from all lattice coordinates
+    all_x = np.concatenate([
+        [0, t[0], rounding_vec[0], simple_enum_vec[0], fincke_pohst_enum_vec[0]]
+    ])
+    all_y = np.concatenate([
+        [0, t[1], rounding_vec[1], simple_enum_vec[1], fincke_pohst_enum_vec[1]]
+    ])
+
+    margin = 5
+    x_min = np.min(all_x) - margin
+    x_max = np.max(all_x) + margin
+    y_min = np.min(all_y) - margin
+    y_max = np.max(all_y) + margin
+
+    # Generate lattice in computed bounds
+    xlim = (x_min, x_max)
+    ylim = (y_min, y_max)
+    lattice_vecs = generate_lattice_points(B, xlim, ylim)
+
+    # Plot 1
+    plt.clf()
+    plt.scatter(lattice_vecs[:, 0], lattice_vecs[:, 1], c="black", label="Lattice Points")
+    plt.scatter(t[0], t[1], c="red", marker="x", s=50, label="Target")
+    draw_fundamental_regions(B, xlim, ylim)
+    draw_basis_vectors(B)
+    plt.xlim(x_min, x_max)
+    plt.ylim(y_min, y_max)
+    plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2)
+    plt.title(f"Enumerated Region (Basis:\n{B})")
+    plt.tight_layout()
+    plt.show()
+
+    sleep(2)
+
+    # Plot 2
+    plt.clf()
+    plt.scatter(lattice_vecs[:, 0], lattice_vecs[:, 1], c="black", label="Lattice Points")
+    plt.scatter(t[0], t[1], c="red", marker="x", s=50, label="Target")
+    plt.scatter(rounding_vec[0], rounding_vec[1], c="orange", label="Simple Rounding Result")
+    plt.scatter(simple_enum_vec[0], simple_enum_vec[1], c="green", label="Simple Enumeration Result")
+    plt.scatter(fincke_pohst_enum_vec[0], fincke_pohst_enum_vec[1], c="magenta", label="Fincke-Phost Enumeration Result")
+    draw_basis_vectors(B)
+    draw_fundamental_regions(B, xlim, ylim)
+    plt.xlim(x_min, x_max)
+    plt.ylim(y_min, y_max)
+    plt.legend(loc='upper center', bbox_to_anchor=(0.5, -0.1), ncol=2)
+    plt.title(f"Enumerated Region (Basis:\n{B})")
+    plt.tight_layout()
+    plt.show()
+
+############
+# Main runner
+############
+if __name__ == "__main__":
+
+    # Diameter
+    l = 4
+
+    # Example bases
+    bases = [
+        np.array([[4, 0], [1, 4]], dtype=int),      # Identity basis
+        np.array([[4, 4], [5, 8]], dtype=int)      # Stretched along x-axis
+    ]
+
+    # Target vector
+    t = np.array([3.3, 8.4], dtype=float)
+
+    # Run the demo for each basis
+    for B in bases:
+        run_lattice_demo(B, t, l)
+

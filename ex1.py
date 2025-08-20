@@ -1,6 +1,7 @@
 import numpy as np
 from numpy import zeros, array
 import matplotlib.pyplot as plt
+from test_bases import B2, B4, B24
 
 # The exercises comprises of function to be implemented (except Exercise 0):
 # Replace the keyword "pass" with your implementation of the desired function
@@ -103,6 +104,7 @@ def Gram_Schmidt_orth(B):
 
 	pass
 
+
 ############
 # Exercise 3
 # Implement The Nearest-Plane Rounding Algorithm (Babai)
@@ -141,6 +143,28 @@ def nearest_plane(B, Bs, t):
 # There is no need to actually run simple_rounding nor nearest_plane.
 ############
 
+def compare_norm_distrib(B, num_samples):
+	"""
+    Compare the distribution of vector norms in the fundamental domains of a basis `B`
+    and its Gram-Schmidt orthogonalization `Bs`, by generating and plotting histograms.
+
+    :param B: A NumPy array of shape (n, n) representing a lattice basis.
+              Each row is treated as a basis vector.
+    :type B: numpy.ndarray
+    :param num_samples: The number of random samples to generate from each distribution.
+    :type num_samples: int
+
+    :notes: Make use of numpy.linalg function norm and numpy.random function rand, as well
+	as 
+    """
+
+	pass
+	
+
+############
+# Helper functions
+############
+
 def plot_two_hist(data_SR, data_NP, n, save=False):
 	"""Take is input two lists and plot two histograms"""
 	
@@ -157,21 +181,15 @@ def plot_two_hist(data_SR, data_NP, n, save=False):
 	
 	plt.clf()
 	plt.close()
+	
 
-def compare_norm_distrib(B, num_samples):
-
-	"""
-    Compare the distribution of vector norms in the fundamental domains of a basis `B`
-    and its Gram-Schmidt orthogonalization `Bs`, by generating and plotting histograms.
-
-    :param B: A NumPy array of shape (n, n) representing a lattice basis.
-              Each row is treated as a basis vector.
-    :type B: numpy.ndarray
-    :param num_samples: The number of random samples to generate from each distribution.
-    :type num_samples: int
-
-    :notes: Make use of numpy.linalg function norm and numpy.random function rand, as well
-	as 
-    """
-
-	pass
+############
+# Main runner
+############
+if __name__ == "__main__":
+    plot_bases = [B2, B4, B24]
+	
+    for B in plot_bases:
+        print("\n========================================")
+        print("Running compare_norm_distrib for basis with shape:", B.shape)
+        compare_norm_distrib(B, 50000)

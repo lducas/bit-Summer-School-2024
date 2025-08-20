@@ -2,29 +2,37 @@ import numpy as np
 import pytest
 from numpy import array
 from sol1 import ( in_lattice, simple_rounding,
-    orth_proj, Gram_Schmidt_orth, nearest_plane,
-    compare_norm_distrib
-)
-from test_bases import B2, B4, B24
+    orth_proj, Gram_Schmidt_orth, nearest_plane)
+from generic_functions import in_span
 
-def iarray(x):
-	return array(x, dtype=int)
+# def iarray(x):
+# 	return array(x, dtype=int)
 
-def in_span(A, v):
-    x = np.linalg.solve(A.T, v)
-    return np.allclose(x @ A, v)
+# def in_span(A, v):
+#     x = np.linalg.solve(A.T, v)
+#     return np.allclose(x @ A, v)
 
-# All test bases
-bases = [
-iarray([[1],]),
-iarray([[2],]),
-iarray([[200],]),
-iarray([[1,0],[0,1]]),
-iarray([[50,0],[0,1]]),
-iarray([[50,0],[20,1]]),
-iarray([[50, -30, 14], [0, 20, -4], [35, 0, -12]]),
-iarray([[50, 33, -30, 14], [0, 20, 4, -4], [1, 35, 0, -12], [-15, 3, 8, -7]])
-]
+# # All test bases
+# bases = [
+# iarray([[1],]),
+# iarray([[2],]),
+# iarray([[200],]),
+# iarray([[1,0],[0,1]]),
+# iarray([[50,0],[0,1]]),
+# iarray([[50,0],[20,1]]),
+# iarray([[50, -30, 14], [0, 20, -4], [35, 0, -12]]),
+# iarray([[50, 33, -30, 14], [0, 20, 4, -4], [1, 35, 0, -12], [-15, 3, 8, -7]])
+# ]
+
+# Generate random bases, targets, and diameters for testing
+dimensions = [1, 2, 4]
+
+instances_per_dim = 5  # number of instances per dimension
+
+bases = []
+for dim in dimensions:
+    for _ in range(instances_per_dim):
+        bases.append(np.random.randint(-30, 30, size=(dim, dim)))
 
 @pytest.mark.parametrize("B", bases)
 def test_in_lattice(B):
@@ -155,9 +163,3 @@ def test_nearest_plane(B):
 #             lhs = abs((t - v).dot(bs))
 #             rhs = 0.501 * bs.dot(bs)
 #             assert lhs <= rhs, "Point not nearest in lattice direction"
-
-plot_bases = [B2, B4, B24]
-
-@pytest.mark.parametrize("B", plot_bases)
-def test_ex4_compare_norm_distrb(B):
-    compare_norm_distrib(B, 50000)

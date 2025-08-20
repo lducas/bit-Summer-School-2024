@@ -1,6 +1,7 @@
 import numpy as np
 from numpy import zeros, array
 import matplotlib.pyplot as plt
+from test_bases import B2, B4, B24
 
 # The exercises comprises of function to be implemented (except Exercise 0):
 # Replace the keyword "pass" with your implementation of the desired function
@@ -163,23 +164,6 @@ def nearest_plane(B, Bs, t):
 # There is no need to actually run simple_rounding nor nearest_plane.
 ############
 
-def plot_two_hist(data_SR, data_NP, n, save=False):
-	"""Take is input two lists and plot two histograms"""
-	
-	_, bins, _ = plt.hist(data_SR, bins=100, density=True, label="Simple Rounding")
-	_ = plt.hist(data_NP, bins=bins, alpha=0.5, density=True, label="Nearest Plane")
-	
-	plt.title("Length of random points in Fundamental Parallelepiped \n Basis dimension: %d"%n)
-	plt.legend()
-	
-	if save:
-		plt.savefig("ParallelepipedDistDim%d.png"%n)
-	else:
-		plt.show()
-	
-	plt.clf()
-	plt.close()
-
 def compare_norm_distrib(B, num_samples):
 	"""
     Compare the distribution of vector norms in the fundamental domains of a basis `B`
@@ -202,3 +186,37 @@ def compare_norm_distrib(B, num_samples):
 	data_NP = [np.linalg.norm((np.random.rand(n) - .5) @ Bs) for x in range(num_samples)]
 	
 	plot_two_hist(data_SR, data_NP, n)
+	
+
+############
+# Helper functions
+############
+
+def plot_two_hist(data_SR, data_NP, n, save=False):
+	"""Take is input two lists and plot two histograms"""
+	
+	_, bins, _ = plt.hist(data_SR, bins=100, density=True, label="Simple Rounding")
+	_ = plt.hist(data_NP, bins=bins, alpha=0.5, density=True, label="Nearest Plane")
+	
+	plt.title("Length of random points in Fundamental Parallelepiped \n Basis dimension: %d"%n)
+	plt.legend()
+	
+	if save:
+		plt.savefig("ParallelepipedDistDim%d.png"%n)
+	else:
+		plt.show()
+	
+	plt.clf()
+	plt.close()
+	
+
+############
+# Main runner
+############
+if __name__ == "__main__":
+    plot_bases = [B2, B4, B24]
+	
+    for B in plot_bases:
+        print("\n========================================")
+        print("Running compare_norm_distrib for basis with shape:", B.shape)
+        compare_norm_distrib(B, 50000)

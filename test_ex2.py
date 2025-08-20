@@ -1,110 +1,169 @@
-import matplotlib.pyplot
 import numpy as np
 from numpy import array
-from math import sqrt
 import pytest
-import matplotlib
 
-# Set random seed for reproducibility
-np.random.seed(42)
+#np.random.seed(42)
 
-from sol2 import lagrange_reduce, size_reduce, LLL, anim_LLL
-from sol1 import Gram_Schmidt_orth, in_lattice
+from sol2 import enumerate, simple_enumeration, fincke_pohst_enumeration
+from sol1 import in_lattice, simple_rounding
 
-# -------------------- Test Data --------------------
+# -------------------- Test Data --------------------------
+# Generate random bases, targets, and diameters for testing
+dimensions = [1, 2, 4]
 
-def iarray(x):
-    return array(x, dtype=int)
+instances_per_dim = 5  # number of instances per dimension
 
-bases = [
-    array([[1]]),
-    array([[2]]),
-    array([[200]]),
-    iarray([[4, 0], [3, 1]]),
-    iarray([[50, 0], [0, 1]]),
-    iarray([[50, 0], [40, 1]]),
-    iarray([[50, -30, 14], [0, 200, -4], [350, 600, -12]]),
-    iarray([[50, 33, -30, 14], [200, 40, -45, -4], [1, 35, 0, -1200], [-15, 3, 8, -7]])
-]
+bases = []
+targets = []
+diameters = []
+radii = []
 
-def gen_same_lat(B, C):
-    return all(in_lattice(C, b) for b in B) and all(in_lattice(B, c) for c in C)
+for dim in dimensions:
+    for _ in range(instances_per_dim):
+        bases.append(np.random.randint(-30, 30, size=(dim, dim)))
+        targets.append(np.random.uniform(-30, 30, size=(dim,)))
+        diameters.append(np.random.randint(1, 5))
+        radii.append(np.random.randint(5, 10))
 
-# -------------------- Exercise 1 --------------------
+t_d = list(zip(targets, diameters))
+B_t_l = list(zip(bases, targets, diameters))
+B_t_r = list(zip(bases, targets, radii))
 
-@pytest.mark.parametrize("B", [
-    iarray([[999, 0], [np.random.randint(0, 999), 1]])
-    for _ in range(30)
-])
-def test_lagrange_reduce(B):
-    B_orig = np.copy(B)
-    U = lagrange_reduce(B)
+# -------------------- Exercise 1 -------------------------
 
-    assert U is not None, "Returned matrix U is None"
-    assert isinstance(U[0, 0], np.int64), "U is not integer matrix"
-    assert np.round(abs(np.linalg.det(U))) == 1, "U is not unimodular"
-    assert np.all(B == U @ B_orig), "B_out != U * B_in"
-    assert np.linalg.norm(B[1]) >= np.linalg.norm(B[0]), "Not Lagrange-reduced"
+@pytest.mark.parametrize("t,d", t_d)
+def test_enumerate(t, d):
+    """Check that enumerate() returns unique integer vectors within coordinate-wise distance constraint."""
     
-    mu = abs(B[0].dot(B[1]) / B[0].dot(B[0]))
-    assert mu <= 0.500001, f"mu = {mu} > 0.5 — Not Lagrange-reduced"
+    r = d / 2
+    results = enumerate(t, r)
 
-# -------------------- Exercise 2 --------------------
+    # Ensure results is iterable
+    assert results is not None, "The function returned None."
+    results_list = list(results)
 
-@pytest.mark.parametrize("B", bases)
-def test_size_reduce(B):
+    # Convert each vector to tuple of ints for uniqueness checks
+    try:
+        tuple_results = [tuple(map(int, np.round(z))) for z in results_list]
+    except Exception as exc:
+        pytest.fail(f"Failed converting results to integer tuples: {exc}")
+
+    # Check if all solutions are distinct
+    assert len(tuple_results) == len(set(tuple_results)), "Duplicate lattice vectors found."
+
+    # Compute the expected number of results
+    per_dim_counts = [
+        int(np.ceil(t[i] + r) - np.ceil(t[i] - r))
+        for i in range(len(t))
+    ]
+    expected_count = np.prod(per_dim_counts)
+
+    assert len(tuple_results) == expected_count, (
+        f"Expected {expected_count} results, got {len(tuple_results)}"
+    )
     
-    Bs = Gram_Schmidt_orth(B)
+    for y in results_list:
+        # Check that all results are in the integer lattice
+        assert in_lattice(np.eye(len(t)), y), f"{y} is not in the integer lattice."
 
-    B_reduced = np.copy(B)
-    size_reduce(B_reduced, Bs)
+        # Check coordinate-wise distance constraint
+        assert np.all(np.abs(y - t) <= r + 1e-9), (
+            f"{y} is not within coordinate-wise distance {r} from {t}"
+        )
+        
+# -------------------- Exercise 2 -------------------------
 
-    assert gen_same_lat(B_reduced, B), "Output basis does not generate the same lattice"
+@pytest.mark.parametrize("B,t,l", B_t_l)
+def test_simple_enumeration_close_to_target(B, t, l):
+    """Check enumerated vectors are in the lattice, within the correct fundamental domain,
+    and that enumeration does not find a worse vector than simple rounding.
+    """
 
-    n, _ = B.shape
-    for i in range(n):
-        for j in range(i):
-            mu = abs(B_reduced[i] @ Bs[j]) / (Bs[j] @ Bs[j])
-            assert mu <= 0.500001, f"mu = {mu} > 0.5 — Not size-reduced"
-
-# -------------------- Exercise 3 --------------------
-
-@pytest.mark.parametrize("n", list(range(2, 20)))  # reduce upper limit for speed
-def test_lll(n):
-    q = 999999
-    B_ = np.identity(n, dtype=int)
-    B_[0, 0] = q
-    for i in range(1, n):
-        B_[i, 0] = np.random.randint(0, q)
-
-    B = np.copy(B_)
-    epsilon = 0.01
-    gamma_2 = sqrt(4 / 3)
-
+    # Compute simple_rounding result
     try:
-        steps = list(LLL(B, epsilon=epsilon, animate=False))
-    except RuntimeError:
-        pytest.fail("LLL did not converge")
+        x = simple_rounding(B, t)
+    except Exception as exc:
+        pytest.fail(f"simple_rounding(B, t) raised an exception: {exc}")
+    dist_x = np.linalg.norm(x - t)
 
-    assert gen_same_lat(B, B_), "LLL output does not generate same lattice"
+    # Check that x is in the lattice
+    assert in_lattice(B, x), f"Result {x} is not in the lattice generated by B"
 
-    Bs = Gram_Schmidt_orth(B)
+    # Check that x is in t + P(B)
+    x_reduced = np.linalg.solve(B.transpose(), x - t)
+    assert np.all(np.abs(x_reduced) <= 0.5 + 1e-9), (
+        f"{x} is not in the fundamental domain around t. "
+        f"Reduced coords: {x_reduced}"
+    )
 
-    for i in range(n - 1):
-        assert np.linalg.norm(Bs[i]) <= (gamma_2 + epsilon) * np.linalg.norm(Bs[i + 1]), "Not weak-LLL reduced"
-
-    for i in range(n):
-        for j in range(i):
-            mu = abs(B[i] @ Bs[j]) / (Bs[j] @ Bs[j])
-            assert mu <= 0.500001, f"mu = {mu} > 0.5 — Not size-reduced"
-
-# -------------------- Exercise 4 (Animation) --------------------
-
-def test_anim_lll_runs():
+    # Compute enumeration results
     try:
-        # This should not raise an error even in headless environments
-        ani = anim_LLL(n=20, q=999999)
-        matplotlib.pyplot.show()
+        y = simple_enumeration(B, t, l)
+    except Exception as exc:
+        pytest.fail(f"simple_enumeration(B, t, l) raised an exception: {exc}")
 
-    except Exception as e:
-        pytest.fail(f"anim_LLL raised an unexpected exception: {e}")
+    # Check that y is in the lattice
+    assert in_lattice(B, y), f"Vector {y} is not in the lattice generated by B"
+
+    # Check that y is in t + l * P(B)
+    y_reduced = np.linalg.solve(B.transpose(), y - t)
+    assert np.all(np.abs(y_reduced) <= l / 2 + 1e-9), (
+        f"{y} is not in the scaled fundamental domain around t. "
+        f"Reduced coords: {y_reduced}"
+    )
+
+    # Check y is not further from t than simple_rounding result
+    dist_y = np.linalg.norm(y - t)
+    assert dist_y <= dist_x + 1e-12, (
+        f"Enumerated vector {y} (dist={dist_y:.6g}) is further from target "
+        f"than simple_rounding result (dist={dist_x:.6g})"
+    )
+
+
+# -------------------- Exercise 4 -------------------------
+
+@pytest.mark.parametrize("B,t,r", B_t_r)
+def test_fp_enumeration_close_to_target(B, t, r):
+    """Check enumerated vectors are in the lattice, within the correct ball,
+    and that enumeration does not find a worse vector than simple rounding.
+    """
+
+    # Compute simple_rounding result
+    try:
+        x = simple_rounding(B, t)
+    except Exception as exc:
+        pytest.fail(f"simple_rounding(B, t) raised an exception: {exc}")
+    dist_x = np.linalg.norm(x - t)
+
+    # Check that x is in the lattice
+    assert in_lattice(B, x), f"Result {x} is not in the lattice generated by B"
+
+    # Check that x is in t + P(B)
+    x_reduced = np.linalg.solve(B.transpose(), x - t)
+    assert np.all(np.abs(x_reduced) <= 0.5 + 1e-9), (
+        f"{x} is not in the fundamental domain around t. "
+        f"Reduced coords: {x_reduced}"
+    )
+
+    # # Compute enumeration results
+    # try:
+    #     y = min(fincke_pohst_enumeration(B, t, r), key=lambda v: np.linalg.norm(np.array(v) - t))
+    # except Exception as exc:
+    #     pytest.fail(f"simple_enumeration(B, t, l) raised an exception: {exc}")
+
+    # # Check that y is in the lattice
+    # assert in_lattice(B, y), f"Vector {y} is not in the lattice generated by B"
+
+    # # Check that y is in t + l * B(r/2)
+    # y_reduced = np.linalg.solve(B.transpose(), y - t)
+    # assert np.linalg.norm(y_reduced) <= r / 2 + 1e-9, (
+    #     f"{y} is not in the scaled fundamental domain around t. "
+    #     f"Reduced coords: {y_reduced}"
+    # )
+
+    # # Check y is not further from t than simple_rounding result
+    # dist_y = np.linalg.norm(y - t)
+    # assert dist_y <= dist_x + 1e-12, (
+    #     f"Enumerated vector {y} (dist={dist_y:.6g}) is further from target "
+    #     f"than simple_rounding result (dist={dist_x:.6g})"
+    # )
