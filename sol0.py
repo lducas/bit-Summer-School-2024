@@ -1,7 +1,7 @@
 import numpy as np
 import matplotlib.pyplot as plt
 
-# --- Exercises using loops (patterns) ---
+# --- Matrix / vector generators ---
 
 def gen_checkerboard(n, k):
     """Return an n x k checkerboard of 0s and 1s."""
@@ -20,151 +20,199 @@ def gen_triangle_mat(n):
             A[i, j] = 1
     return A
 
-# --- Exercises using slicing / indexing ---
-
-def reverse_rows(A):
-    """Return a matrix with rows reversed."""
-    return A[::-1, :]
-
-
-def extract_diag(A):
-    """Return the main diagonal of a square matrix as a vector."""
-    return np.diag(A)
-
-# --- Exercises using random generation ---
 
 def gen_rand_int(n, k, low, high):
     """Return an n x k matrix of random integers in [low, high)."""
     return np.random.randint(low, high, size=(n, k))
 
 
-def sum_first_rows(n, k, l):
-    """Return the sum of the first l rows of a random matrix."""
-    A = np.random.rand(n, k)
-    row_sum = np.sum(A[:l, :], axis=0)
-    print("Matrix:\n", A)
-    print("Sum of first", l, "rows:", row_sum)
-    return row_sum
+# --- Matrix manipulation ---
 
-# --- Exercises using algebra (dot product, trace, etc.) ---
-def mul_by_vector(n, k):
-    """Return the product of an n x k matrix and a k x 1 vector of ones."""
-    A = np.arange(1, n*k+1).reshape(n, k)
-    v = np.ones((k, 1))
-    return A @ v
+def reverse_rows(A):
+    """Return a matrix with rows reversed."""
+    return A[::-1, :]
 
 
-def trace_of_square(n):
-    """Generate an n x n matrix and return its trace (sum of diagonal)."""
-    A = np.arange(1, n*n+1).reshape(n, n)
-    return np.trace(A)
+def modify_diags(A):
+    """Swap main and the anti-diagonal."""
+    B = A.copy()
+    n = A.shape[0]
+    
+    for i in range(n):
+        # swap element on main diagonal (i,i) with anti-diagonal (i, n-1-i)
+        B[i, i], B[i, n - 1 - i] = B[i, n - 1 - i], B[i, i]
+    
+    return B
 
-# --- More interesting exercises ---
-def demo_identity_effect(A):
-    """Show that multiplying by identity leaves a matrix unchanged."""
-    I = np.identity(A.shape[0])
-    result = A @ I
-    print("Original matrix:\n", A)
-    print("A * I = \n", result)
-    return result
+# --- Linear algebra ---
+
+def project(x, y):
+    """Return the projection of a (vector) x onto the direction of y."""
+    return (x @ y) / (y @ y) * y
 
 
-def check_orthogonality(u, v):
-    """Check if two vectors are orthogonal using inner product."""
-    ip = np.dot(u, v)
-    print(f"Inner product = {ip}")
-    if np.isclose(ip, 0):
-        print("Vectors are orthogonal!")
+def check_orthonormal(x, y):
+    """Check if two vectors are orthonormal (orthogonal + unit length).
+    Returns True if they are orthonormal, False otherwise."""
+    ip = x @ y
+    norm_x = np.linalg.norm(x)
+    norm_y = np.linalg.norm(y)
+
+    if np.isclose(ip, 0) and np.isclose(norm_x, 1) and np.isclose(norm_y, 1):
+        print("Vectors are orthonormal!")
+        return True
     else:
-        print("Vectors are not orthogonal.")
-    return ip
+        print("Vectors are not orthonormal!")
+        return False
 
 
-def demo_transpose_properties(A):
-    """Show that transpose of transpose is the original, and test for symmetry."""
-    T = A.T
-    TT = T.T
-    print("Matrix A:\n", A)
-    print("Transpose A^T:\n", T)
-    print("Double transpose (A^T)^T:\n", TT)
-    if np.allclose(A, T):
-        print("Matrix is symmetric!")
-    return T
+def linear_map(A, x):
+    """Apply a linear map defined by matrix A to vector x."""
+    return A @ x
 
 
-def demo_inverse(A):
-    """Show that multiplying a matrix by its inverse yields identity."""
-    try:
-        invA = np.linalg.inv(A)
-        I_check = A @ invA
-        print("Matrix A:\n", A)
-        print("Inverse A^-1:\n", invA)
-        print("A * A^-1 = \n", I_check)
-        return invA
-    except np.linalg.LinAlgError:
-        print("Matrix is not invertible.")
-        return None
+def inverse_map(A, y):
+    """Apply the inverse of a linear map defined by matrix A to vector y."""
+    return np.linalg.solve(A, y)
 
-# --- Plotting helpers ---
+
+def solve_via_eigenbasis(n=4):
+    """
+    Solve a random linear system M x = b using the eigenbasis.
+    1. Generate random invertible M and vector b.
+    2. Compute eigen-decomposition M = P D P^{-1}.
+    3. Transform system: M' = D (diagonal), b' = P^{-1} b.
+    4. Solve M' y = b' for y (easy since M' is diagonal).
+    5. Map back x = P y.
+    6. Verify solution.
+    """
+    print("\n--- Solve in Eigenbasis ---")
+
+    # Step 1: Generate a radnom linear system
+    # Generate a random M that is invertible, i.e. det(M) != 0), 
+    # and a random vector vector b.
+    while True:
+        M = np.random.randint(1, 10, (n, n))
+        if np.linalg.det(M) != 0:
+            break
+    b = np.random.randint(1, 10, (n, ))
+
+    # Step 2: Perform eigen-decomposition of M
+    # Make use of numpy's eigenvalue decomposition function np.linalg.eig,
+    # and the numpy function np.diag.
+    eigvals, eigvecs = np.linalg.eig(M)
+    P = eigvecs
+    D = np.diag(eigvals)
+
+    # Step 3: Express b in the eigenbasis
+    b_mapped = np.linalg.inv(P) @ b
+
+    # Step 4: Solve in eigenbasis (diagonal system)
+    y = b_mapped / eigvals  # elementwise division since D y = b'
+
+    # Step 5: Map back to original space
+    x = P @ y
+
+    # Step 6: Verification
+    residual = M @ x - b
+    check = np.allclose(residual, 0)
+
+    # Return results
+    if check:
+        print("Original M:\n", M)
+        print("Diagonal M' (eigenbasis):\n", D)
+        return M, b, x
+    else:
+        print("Solution verification failed!")
+        return None, None, None
+
+
+
+# --- Plotting ---
+
 def plot_matrix(A, title="Matrix", cmap="viridis"):
-    """Plot a matrix using imshow with a colorbar."""
     plt.imshow(A, cmap=cmap, interpolation='nearest')
     plt.colorbar()
     plt.title(title)
     plt.show()
 
-
 def plot_checkerboard(A):
-    """Plot a checkerboard as a chessboard (black & white)."""
     plt.imshow(A, cmap="gray", interpolation='nearest')
     plt.title("Checkerboard / Chessboard")
     plt.show()
 
-# --- Worksheet Example ---
+# --- Main testing ---
+
 if __name__ == "__main__":
+
+    # 1. Checkerboard
     print("\n1. Checkerboard:")
     cb = gen_checkerboard(8, 8)
     print(cb)
     plot_checkerboard(cb)
 
-    print("\n2. Lower-triangular:")
+    input("Press Enter to continue...")
+
+    # 2. Lower-triangular
+    print("\n2. Lower-triangular matrix (5x5):")
     tri = gen_triangle_mat(5)
     print(tri)
-    plot_matrix(tri, title="Lower-triangular")
+    # plot_matrix(tri, title="Lower-triangular")
+    input("Press Enter to continue...")
 
+    # 3. Reverse rows
     print("\n3. Reverse rows:")
     mat3 = np.arange(1, 10).reshape(3, 3)
     rev = reverse_rows(mat3)
-    print(rev)
-    plot_matrix(rev, title="Rows reversed")
+    print("Original matrix:\n", mat3)
+    print("Reversed rows matrix:\n", rev)
+    # plot_matrix(rev, title="Rows reversed")
+    input("Press Enter to continue...")
 
-    print("\n4. Extract diagonal:")
-    mat4 = np.arange(1, 17).reshape(4, 4)
-    diag = extract_diag(mat4)
-    print(diag)
+    # 4. Swap diagonals
+    print("\n4. Swap main and anti-diagonal:")
+    mat4 = np.arange(1, 10).reshape(3, 3)
+    swapped = modify_diags(mat4)
+    print("Original matrix:\n", mat3)
+    print("Swapped matrix:\n", swapped)
+    # plot_matrix(swapped, title="Diagonals swapped")
+    input("Press Enter to continue...")
 
-    print("\n5. Random integers:")
-    rand_ints = gen_rand_int(3, 4, 0, 10)
-    print(rand_ints)
-    plot_matrix(rand_ints, title="Random integers")
+    # 5. Linear mapping and inverse mapping
+    print("\n6. Linear mapping and inverse mapping:")
+    A = np.array([[2, 0], [0, 3]])
+    x = np.array([1, 4])
+    y = linear_map(A, x)
+    x_new = inverse_map(A, y)
+    if np.allclose(x, x_new):
+        print("Inverse mapping successful!")
+    else:
+        print("Inverse mapping failed!")
+    input("Press Enter to continue...")
 
-    print("\n6. Sum of first rows:")
-    sum_first_rows(5, 3, 2)
+    # 6. Projections
+    print("\n8. Projection:")
+    v = np.array([3, 4])
+    u = np.array([1, 0])
+    z = np.array([0, 1])
 
-    print("\n7. Multiply by vector of ones:")
-    print(mul_by_vector(3, 4))
+    proj_v_onto_u = project(v, u)
+    proj_v_onto_z = project(v, z)
 
-    print("\n8. Trace of square:")
-    print(trace_of_square(4))
+    v_new = proj_v_onto_u * u + proj_v_onto_z * z
+    
+    if check_orthonormal(u, z):
+        if np.allclose(v, v_new):
+            print("Projection successful!")
+    input("Press Enter to continue...")
 
-    print("\n9. Identity effect:")
-    demo_identity_effect(np.array([[2, 1], [0, 3]]))
-
-    print("\n10. Orthogonality check:")
-    check_orthogonality(np.array([1, 0, 0]), np.array([0, 1, 0]))
-
-    print("\n11. Transpose properties:")
-    demo_transpose_properties(np.array([[1, 2], [2, 1]]))
-
-    print("\n12. Inverse demo:")
-    demo_inverse(np.array([[4, 7], [2, 6]]))
+    # 7. Solve via transformed space
+    print("\n10. Solve random system via transformed space:")
+    
+    # Call the function and capture all results
+    M, b, x = solve_via_eigenbasis(n=4)
+    
+    print("\n--- Summary of Transformed Space Solution ---")
+    print("Original system M:\n", M)
+    print("Right-hand side b:", b)
+    print("Mapped-back solution x:", x)
