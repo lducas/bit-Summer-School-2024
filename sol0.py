@@ -92,10 +92,10 @@ def solve_via_eigenbasis(n=4):
     # Generate a random M that is invertible, i.e. det(M) != 0), 
     # and a random vector vector b.
     while True:
-        M = np.random.randint(1, 10, (n, n))
+        M = np.random.uniform(1, 10, size=(n, n))
         if np.linalg.det(M) != 0:
             break
-    b = np.random.randint(1, 10, (n, ))
+    b = np.random.uniform(1, 10, size=(n, ))
 
     # Step 2: Perform eigen-decomposition of M
     # Make use of numpy's eigenvalue decomposition function np.linalg.eig,
