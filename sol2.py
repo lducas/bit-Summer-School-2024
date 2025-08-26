@@ -120,35 +120,42 @@ def fincke_pohst_1d_enumeration(b1, x, t, r):
     # # Compute the offset
     # offset = ((x - t) @ b1) / (b1 @ b1)
 
+    # # Normalized radius
+    # r_norm = r / np.linalg.norm(b1)
+
     # # Positive direction
     # i = 1
-    # while np.linalg.norm((offset + i) * b1) <= r:
+    # while np.abs(offset + i) <= r_norm:
     #     results.append(x + i * b1)
     #     i += 1
 
     # # Negative direction
     # i = -1
-    # while np.linalg.norm((offset + i) * b1) <= r:
+    # while np.abs(offset + i) <= r_norm:
     #     results.append(x + i * b1)
     #     i -= 1
 
     # return results
+
 
     results = []
 
     # Compute the offset
     offset = ((x - t) @ b1) / (b1 @ b1)
 
-    # Cacluate the normalized radius
+    # Normalized radius
     r_norm = r / np.linalg.norm(b1)
 
-    # Calculate the range of integer multiples to consider
-    lower = int(np.ceil(offset - r_norm))
-    upper = int(np.floor(offset + r_norm))
+    if not np.isnan(r_norm): 
 
-    # Enumerate all integer multiples of b1 within the radius
-    for i in range(lower, upper + 1):
-        results.append(x + i * b1)
+        # Determine the integer bounds for i
+        lower = int(np.ceil(-offset - r_norm))
+        upper = int(np.floor(-offset + r_norm))
+
+        # Enumerate all integer multiples, excluding i = 0 (which gives x itself)
+        for i in range(lower, upper + 1):
+            if i != 0:
+                results.append(x + i * b1)
 
     return results
 
@@ -318,7 +325,7 @@ def run_lattice_demo(B, t, l):
     r = np.linalg.norm(x - t)
 
     print("\nRunning Fincke-Phost enumeration...")
-    fincke_pohst_enum_vec = min(fincke_pohst_enumeration(B, t, 4*r), key=lambda v: np.linalg.norm(np.array(v) - t))
+    fincke_pohst_enum_vec = min(fincke_pohst_enumeration(B, t, 2*r), key=lambda v: np.linalg.norm(np.array(v) - t))
     print("Closest lattice vector (Fincke-Phost enumeration):", fincke_pohst_enum_vec)
 
     # Determine plotting bounds dynamically from all lattice coordinates
