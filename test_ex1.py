@@ -90,7 +90,7 @@ def test_orth_proj(n):
 @pytest.mark.parametrize("B", bases)
 def test_gram_schmidt(B):
     Bs = Gram_Schmidt_orth(B)
-    n, d = B.shape
+    n, _ = B.shape
 
     assert Bs.shape == B.shape, f"Expected shape {B.shape}, got {Bs.shape}"
     assert np.allclose(B[0], Bs[0])
@@ -104,11 +104,12 @@ def test_gram_schmidt(B):
         for j in range(1, i):
             assert np.allclose(Bs[i] @ B[j], 0), f"B{i} and Bs{j} are not orthogonal."
     
-    for b in B:
-        assert in_span(Bs, b), "Spans of first i basis vectors are not equal."
+    for i in range(1, B.shape[0] + 1):
+        # Is the i-th row of B in the span of the first i rows of Bs?
+        assert in_span(Bs[:i, :], B[i-1, :]), f"Mismatch at row {i}"
 
-    for bs in Bs:
-        assert in_span(B, bs), "Spans of first i basis vectors are not equal."
+        # Is the i-th row of Bs in the span of the first i rows of B?
+        assert in_span(B[:i, :], Bs[i-1, :]), f"Mismatch at row {i}"
         
 
 # @pytest.mark.parametrize("B", bases)
